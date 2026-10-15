@@ -1,6 +1,9 @@
 # Reglas que usa la plataforma
 
-Son las reglas que la página aplica para anotar y calcular. Si tu escuela juega distinto, cada temporada tiene un campo "Reglamento de la temporada" que se muestra en la pestaña Reglas. La página **no cambia sus cálculos** por ese texto: solo lo muestra.
+Son las reglas que la página aplica para anotar y calcular. Si tu escuela juega distinto, cada edición tiene un campo "Reglamento de la edición" que se muestra en la pestaña Reglas. La página **no cambia sus cálculos** por ese texto: solo lo muestra.
+
+## Ramas
+Cada deporte se juega en dos ramas, **femenino** y **masculino**. Cada rama tiene sus propias ediciones, equipos, tablas, campeones y estadísticas, y no se mezclan. Las reglas de juego son las mismas en las dos ramas. Si tu reglamento cambia algo (por ejemplo la duración), escríbelo en el reglamento de la edición.
 
 ## Baseball5
 - 5 jugadores por equipo, pelota sin bate ni guante.
@@ -19,8 +22,8 @@ Son las reglas que la página aplica para anotar y calcular. Si tu escuela juega
 - En liga: ganar por 2 o más sets da 3 puntos; ganar por 1 set da 2 y perder por 1 set da 1.
 
 ## Tabla de posiciones
-- Victoria 3 puntos y empate 1 (configurable por temporada). Derrota 0.
-- Orden: puntos y luego hasta 3 desempates elegidos por temporada: mayor diferencia, más a favor, menos en contra, más victorias, resultado entre los empatados y orden alfabético.
+- Victoria 3 puntos y empate 1 (configurable por edición). Derrota 0.
+- Orden: puntos y luego hasta 3 desempates elegidos por edición: mayor diferencia, más a favor, menos en contra, más victorias, resultado entre los empatados y orden alfabético.
 - Valor por defecto: diferencia y luego a favor. Si sigue el empate, se mantiene el orden de inscripción.
 - La tabla se recalcula sola al corregir un resultado.
 

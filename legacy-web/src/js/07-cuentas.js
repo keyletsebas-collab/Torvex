@@ -1,0 +1,361 @@
+// Cuentas con Supabase: acceso obligatorio, colegios, aprobación de miembros y conexión con los datos
+var REQ_LOGIN=typeof SIN_LOGIN==="undefined",AUTH="carga",SB=null,MYP=null,MYMAIL="",COLEGIOS=[];
+var GMODE="login",GORG=false,GNEW=false,GCOL="",GCOLN="",GOPEN=false,GERR="",GBUSY=false;
+var GF={nombre:"",email:"",pass:"",pass2:"",codigo:"",cnom:"",cclave:""};
+var MEM=[],MEMERR="",APR=null,MEMT=null,WAITT=null,MYCODE="";
+
+/* ---------- utilidades ---------- */
+async function rpc(n,a){var r=await SB.rpc(n,a||{});if(r.error)throw r.error;return r.data}
+function gerr(e){
+  var m=String((e&&e.message)||e||""),c=e&&e.code;
+  if(c==="user_already_exists"||/already (been )?registered|already exists/i.test(m))return"Ese correo ya tiene una cuenta. Inicia sesión.";
+  if(c==="invalid_credentials"||/invalid login/i.test(m))return"Correo o contraseña incorrectos.";
+  if(c==="email_not_confirmed"||/not confirmed/i.test(m))return"Falta desactivar «Confirm email» en Supabase (Authentication, Providers, Email).";
+  if(c==="weak_password"||/at least 6|weak password/i.test(m))return"La contraseña debe tener al menos 6 caracteres.";
+  if(c==="over_request_rate_limit"||c==="over_email_send_rate_limit"||/rate limit|too many/i.test(m))return"Demasiados intentos. Espera un momento.";
+  if(c==="email_address_invalid"||/email.*invalid|invalid.*email/i.test(m))return"Escribe un correo válido.";
+  if(/failed to fetch|network|load failed/i.test(m))return"No hay conexión con el servidor. Revisa tu internet.";
+  return m||"Ocurrió un error. Inténtalo de nuevo.";
+}
+function colegioNombre(){var c=COLEGIOS.filter(function(x){return MYP&&x.id===MYP.colegio_id})[0];return c?c.nombre:"tu colegio"}
+async function cargarColegios(){try{var r=await SB.from("colegios").select("id,nombre").order("nombre");COLEGIOS=r.data||[]}catch(e){COLEGIOS=[]}}
+function clearWait(){if(WAITT){clearInterval(WAITT);WAITT=null}}
+function gateShow(on){document.body.classList.toggle("gating",!!on);var g=$("gate");if(g)g.hidden=!on}
+
+/* ---------- pantalla de acceso ---------- */
+function gField(id,label,type,val,extra){return'<label for="'+id+'">'+label+'</label><input class="gin" id="'+id+'" data-gf="'+id.slice(2)+'" type="'+type+'" value="'+esc(val||"")+'" '+(extra||"")+'>'}
+function gCard(inner){return'<div class="gbox"><div class="gbrand"><span class="glogo">🏆</span><div><b>Torneos escolares</b><small>Liga deportiva escolar</small></div></div>'+inner+'</div>'}
+function gColegio(){
+  var sel=GNEW?"➕ Crear un colegio nuevo":(GCOL?esc(GCOLN):"Elige tu colegio");
+  var h='<label>Colegio</label><div class="gdd'+(GOPEN?" open":"")+'"><button type="button" class="gddb" data-ac="col_abrir" aria-expanded="'+(GOPEN?"true":"false")+'"><span>'+sel+'</span><i>▾</i></button><div class="gddl" role="listbox">';
+  h+=COLEGIOS.length?COLEGIOS.map(function(c){return'<button type="button" role="option" data-ac="col_pick" data-id="'+esc(c.id)+'" data-n="'+esc(c.nombre)+'" class="'+(c.id===GCOL&&!GNEW?"on":"")+'">'+esc(c.nombre)+'</button>'}).join(""):'<p class="gempty">Todavía no hay colegios registrados.</p>';
+  h+='<button type="button" class="gnew" data-ac="col_nuevo">➕ Mi colegio no está: crear uno nuevo</button></div></div>';
+  if(GNEW)h+=gField("g_cnom","Nombre del colegio","text",GF.cnom,'maxlength="60" autocomplete="off"')+gField("g_cclave","Contraseña del colegio (mínimo 6)","password",GF.cclave,'autocomplete="new-password"')+'<p class="gs">Con esta contraseña otros organizadores podrán unirse a tu colegio. Los estudiantes usan el código que verás en Ajustes.</p>';
+  else if(GCOL)h+=gField("g_cclave","Contraseña del colegio","password",GF.cclave,'autocomplete="off"')+'<p class="gs">La puso quien creó el colegio.</p>';
+  return h;
+}
+function gForm(){
+  var comp=AUTH==="completar",lg=GMODE==="login"&&!comp,h="";
+  if(comp)h+='<h2 class="gh">Termina tu registro</h2><p class="gs">Tu cuenta ya existe ('+esc(MYMAIL)+'). Falta elegir tu colegio.</p>';
+  else h+='<div class="gtabs"><button type="button" data-ac="modo" data-m="login" class="'+(lg?"on":"")+'">Iniciar sesión</button><button type="button" data-ac="modo" data-m="crear" class="'+(lg?"":"on")+'">Crear cuenta</button></div>';
+  var err=GERR?'<p class="gerr" role="alert">'+esc(GERR)+'</p>':"",dis=GBUSY?" disabled":"";
+  if(lg){
+    return gCard(h+gField("g_email","Correo electrónico","email",GF.email,'autocomplete="email" placeholder="tu@correo.com"')+gField("g_pass","Contraseña","password",GF.pass,'autocomplete="current-password"')+err+'<button type="button" class="gpri" data-ac="entrar"'+dis+'>'+(GBUSY?"Entrando…":"Entrar")+'</button><p class="gs">¿No tienes cuenta? Pulsa «Crear cuenta».</p>');
+  }
+  if(!comp)h+=gField("g_nombre","Nombre","text",GF.nombre,'maxlength="40" autocomplete="name" placeholder="Tu nombre"')+gField("g_email","Correo electrónico","email",GF.email,'autocomplete="email" placeholder="tu@correo.com"')+gField("g_pass","Contraseña (mínimo 6)","password",GF.pass,'autocomplete="new-password"')+gField("g_pass2","Repite la contraseña","password",GF.pass2,'autocomplete="new-password"');
+  h+='<button type="button" class="gorg'+(GORG?" on":"")+'" data-ac="org" aria-pressed="'+(GORG?"true":"false")+'"><span class="gsw"><i></i></span><span class="got"><b>Organizador</b><small>'+(GORG?"Elige tu colegio o crea uno nuevo":"Si no lo marcas, necesitas el código de tu colegio")+'</small></span></button>';
+  h+=GORG?gColegio():gField("g_codigo","Código del colegio","text",GF.codigo,'maxlength="30" autocapitalize="characters" autocomplete="off" placeholder="Ej. SANJ-3F9A27C1"')+'<p class="gs">Te lo da el organizador de tu colegio.</p>';
+  h+=err+'<button type="button" class="gpri" data-ac="'+(comp?"completar":"crear")+'"'+dis+'>'+(GBUSY?"Un momento…":(comp?"Continuar":"Crear cuenta"))+'</button>';
+  if(comp)h+='<button type="button" class="glink" data-ac="salir">Cerrar sesión</button>';
+  return gCard(h);
+}
+function gWait(){return'<div class="gwait"><div class="gpulse"><i></i></div><h2>Esperando aprobación</h2><p>El organizador de <b>'+esc(colegioNombre())+'</b> debe darte permiso para entrar. Esta pantalla se actualiza sola.</p><button type="button" class="glink" data-ac="salir">Cerrar sesión</button></div>'}
+function gateRender(){
+  gateShow(true);
+  var g=$("gate"),h;
+  if(AUTH==="carga")h=gCard('<p class="gs gload">Cargando…</p>');
+  else if(AUTH==="config")h=gCard('<h2 class="gh">Falta configurar la conexión</h2><p class="gs">'+(SB_URL&&SB_KEY?"No se pudo cargar la librería de Supabase. Revisa tu conexión a internet y recarga la página.":"Escribe la URL y la clave publishable de Supabase en src/js/00-config.js.")+'</p>');
+  else if(AUTH==="pendiente")h=gWait();
+  else h=gForm();
+  g.className=AUTH==="pendiente"?"gate wait":"gate";
+  g.innerHTML=h;
+}
+
+/* ---------- inicio, registro y sesión ---------- */
+async function authInit(){
+  AUTH="carga";render();
+  if(!SB_URL||!SB_KEY||!window.supabase||!window.supabase.createClient){AUTH="config";render();return}
+  try{
+    SB=window.supabase.createClient(SB_URL,SB_KEY);
+    await cargarColegios();
+    var r=await SB.auth.getSession(),s=r&&r.data&&r.data.session;
+    if(s)await resolverSesion(s);else{AUTH="fuera";render()}
+  }catch(e){GERR=gerr(e);AUTH="fuera";render()}
+}
+async function resolverSesion(s){
+  clearWait();
+  MYMAIL=(s.user&&s.user.email)||"";
+  var r=await SB.from("perfiles").select("id,nombre,colegio_id,estado,rol,equipo").eq("id",s.user.id).maybeSingle();
+  if(r.error)throw r.error;
+  if(!r.data){
+    try{await SB.auth.signOut({scope:"local"})}catch(e){}
+    MYP=null;AUTH="fuera";GMODE="login";GERR="El organizador rechazó tu entrada y tu cuenta fue eliminada. Puedes crear una nueva con el código correcto.";render();return;
+  }
+  MYP=r.data;
+  if(MYP.estado==="aprobado"){await entrarApp()}
+  else if(MYP.estado==="pendiente"){AUTH="pendiente";GERR="";vigilar();render()}
+  else{AUTH="completar";render()}
+}
+function vigilar(){
+  clearWait();
+  WAITT=setInterval(async function(){
+    try{var r=await SB.auth.getSession(),s=r&&r.data&&r.data.session;if(s)await resolverSesion(s)}catch(e){}
+  },4000);
+}
+async function entrarApp(){
+  clearWait();
+  UID=MYP.id;NAME=MYP.nombre;ADMIN=MYP.rol==="organizador";
+  U=mkU(MYP.colegio_id);DB=mkDB(MYP.colegio_id);
+  suscribir();
+  AUTH="ok";gateShow(false);BOOT=true;
+  if(ADMIN){cargarMiembros();cargarCodigo();MEMT=setInterval(cargarMiembros,10000)}
+  render();
+}
+function gEmailOk(v){return/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)}
+function gValidarColegio(){
+  if(!GORG)return GF.codigo.trim()?"":"Escribe el código de tu colegio.";
+  if(GNEW){
+    if(GF.cnom.trim().length<2)return"Escribe el nombre del colegio.";
+    if(COLEGIOS.some(function(c){return c.nombre.trim().toLowerCase()===GF.cnom.trim().toLowerCase()}))return"Ese colegio ya está registrado: elígelo en la lista.";
+    return(GF.cclave||"").length<6?"La contraseña del colegio debe tener al menos 6 caracteres.":"";
+  }
+  if(!GCOL)return"Elige tu colegio en la lista o crea uno nuevo.";
+  return GF.cclave?"":"Escribe la contraseña del colegio.";
+}
+async function gUnirme(){
+  if(!GORG)await rpc("unirme_con_codigo",{p_codigo:GF.codigo});
+  else if(GNEW)await rpc("crear_colegio_y_unirme",{p_nombre:GF.cnom.trim(),p_clave:GF.cclave});
+  else await rpc("unirme_como_organizador",{p_colegio:GCOL,p_clave:GF.cclave});
+}
+async function crearCuenta(){
+  if(GBUSY)return;
+  var nombre=GF.nombre.trim(),email=GF.email.trim().toLowerCase();
+  var e=!nombre?"Escribe tu nombre.":!gEmailOk(email)?"Escribe un correo válido.":(GF.pass||"").length<6?"La contraseña debe tener al menos 6 caracteres.":GF.pass!==GF.pass2?"Las contraseñas no coinciden.":gValidarColegio();
+  if(e){GERR=e;gateRender();return}
+  GBUSY=true;GERR="";gateRender();
+  try{
+    if(!GORG&&!(await rpc("validar_codigo",{p_codigo:GF.codigo})))throw new Error("Código de colegio no válido. Pídeselo al organizador de tu colegio.");
+    var r=await SB.auth.signUp({email:email,password:GF.pass,options:{data:{nombre:nombre}}});
+    if(r.error)throw r.error;
+    if(!r.data||!r.data.session)throw new Error("Supabase pidió confirmar el correo. Hay que desactivar «Confirm email» en Authentication, Providers, Email.");
+    try{await gUnirme()}catch(e2){GERR=gerr(e2)}
+    GF.pass=GF.pass2=GF.cclave="";
+    await resolverSesion(r.data.session);
+  }catch(e3){GERR=gerr(e3)}
+  GBUSY=false;if(AUTH!=="ok")gateRender();
+}
+async function completarRegistro(){
+  if(GBUSY)return;
+  var e=gValidarColegio();if(e){GERR=e;gateRender();return}
+  GBUSY=true;GERR="";gateRender();
+  try{
+    if(!GORG&&!(await rpc("validar_codigo",{p_codigo:GF.codigo})))throw new Error("Código de colegio no válido. Pídeselo al organizador de tu colegio.");
+    await gUnirme();GF.cclave="";
+    var r=await SB.auth.getSession();await resolverSesion(r.data.session);
+  }catch(e3){GERR=gerr(e3)}
+  GBUSY=false;if(AUTH!=="ok")gateRender();
+}
+async function iniciarSesion(){
+  if(GBUSY)return;
+  var email=GF.email.trim().toLowerCase();
+  if(!gEmailOk(email)||!GF.pass){GERR="Escribe tu correo y tu contraseña.";gateRender();return}
+  GBUSY=true;GERR="";gateRender();
+  try{
+    var r=await SB.auth.signInWithPassword({email:email,password:GF.pass});
+    if(r.error)throw r.error;
+    GF.pass="";await resolverSesion(r.data.session);
+  }catch(e){GERR=gerr(e)}
+  GBUSY=false;if(AUTH!=="ok")gateRender();
+}
+async function cerrarSesion(){
+  clearWait();if(MEMT){clearInterval(MEMT);MEMT=null}
+  try{await SB.auth.signOut()}catch(e){}
+  location.reload();
+}
+
+/* ---------- adaptadores: la app habla con Supabase igual que con la base compartida anterior ---------- */
+function mkU(cid){
+  return{
+    id:async function(){return MYP.id},name:async function(){return MYP.nombre},
+    isOwner:async function(){return false},canEdit:async function(){return ADMIN},
+    search:async function(q){
+      var r=await SB.from("perfiles").select("id,nombre").eq("colegio_id",cid).eq("estado","aprobado").ilike("nombre","%"+String(q||"").replace(/[%_,]/g,"")+"%").limit(8);
+      return(r.data||[]).map(function(p){return{id:p.id,name:p.nombre}});
+    },
+    profiles:async function(ids){
+      var r=await SB.from("perfiles").select("id,nombre").in("id",ids),o={};
+      (r.data||[]).forEach(function(p){o[p.id]={name:p.nombre}});return o;
+    }
+  };
+}
+function mkDB(cid){
+  var cache={},subs={},cargado={};
+  function lista(c){var m=cache[c]||{};return Object.keys(m).map(function(id){return{id:id,exists:true,data:function(){return m[id]}}})}
+  function snapCol(c,o){
+    var d=lista(c);
+    if(o.f)d.sort(function(a,b){var x=a.data()[o.f],y=b.data()[o.f];return(x>y?1:x<y?-1:0)*(o.d==="desc"?-1:1)});
+    if(o.n)d=d.slice(0,o.n);
+    return{docs:d,size:d.length,empty:!d.length};
+  }
+  function docSnap(c,id){var m=cache[c]||{},ok=Object.prototype.hasOwnProperty.call(m,id);return{id:id,exists:ok,data:function(){return ok?m[id]:undefined}}}
+  function avisar(c){(subs[c]||[]).forEach(function(s){try{s.cb(s.snap())}catch(e){}})}
+  function cargar(c){
+    if(cargado[c])return cargado[c];
+    var q=c==="roles"
+      ?SB.from("perfiles").select("id,rol,equipo").eq("colegio_id",cid).eq("estado","aprobado").neq("rol","espectador")
+      :SB.from("docs").select("id,data").eq("colegio_id",cid).eq("col",c);
+    cargado[c]=Promise.resolve(q).then(function(r){
+      if(r.error){delete cargado[c];throw r.error}
+      var m={};(r.data||[]).forEach(function(x){m[x.id]=c==="roles"?{role:x.rol,team:x.equipo||""}:x.data});
+      cache[c]=m;
+    });
+    return cargado[c];
+  }
+  function suscribirA(c,s,eb){
+    (subs[c]=subs[c]||[]).push(s);
+    cargar(c).then(function(){s.cb(s.snap())},function(e){if(eb)eb(e)});
+    return function(){subs[c]=(subs[c]||[]).filter(function(x){return x!==s})};
+  }
+  function escribir(c,id,v,mezclar){
+    var antes=(cache[c]||{})[id],hay=cache[c]&&Object.prototype.hasOwnProperty.call(cache[c],id);
+    var nuevo=JSON.parse(JSON.stringify(mezclar?Object.assign({},antes||{},v):v));
+    cache[c]=cache[c]||{};cache[c][id]=nuevo;avisar(c);
+    var p=c==="roles"
+      ?rpc("aprobar_miembro",{p_uid:id,p_cargo:nuevo.role,p_equipo:nuevo.team||""})
+      :Promise.resolve(SB.from("docs").upsert({colegio_id:cid,col:c,id:id,data:nuevo})).then(function(r){if(r.error)throw r.error});
+    return p.catch(function(e){if(hay)cache[c][id]=antes;else delete cache[c][id];avisar(c);throw e});
+  }
+  function borrar(c,id){
+    var antes=(cache[c]||{})[id],hay=cache[c]&&Object.prototype.hasOwnProperty.call(cache[c],id);
+    if(hay){delete cache[c][id];avisar(c)}
+    var p=c==="roles"
+      ?rpc("aprobar_miembro",{p_uid:id,p_cargo:"espectador",p_equipo:""})
+      :Promise.resolve(SB.from("docs").delete().eq("colegio_id",cid).eq("col",c).eq("id",id)).then(function(r){if(r.error)throw r.error});
+    return p.catch(function(e){if(hay){cache[c][id]=antes;avisar(c)}throw e});
+  }
+  function docRef(c,id){
+    return{
+      id:id,
+      get:function(){return cargar(c).then(function(){return docSnap(c,id)})},
+      onSnapshot:function(cb,eb){return suscribirA(c,{cb:cb,snap:function(){return docSnap(c,id)}},eb)},
+      set:function(v){return escribir(c,id,v,false)},
+      update:function(v){return escribir(c,id,v,true)},
+      delete:function(){return borrar(c,id)}
+    };
+  }
+  function colRef(c,o){
+    o=o||{};
+    return{
+      doc:function(id){return docRef(c,String(id))},
+      orderBy:function(f,d){return colRef(c,Object.assign({},o,{f:f,d:d||"asc"}))},
+      limit:function(n){return colRef(c,Object.assign({},o,{n:n}))},
+      get:function(){return cargar(c).then(function(){return snapCol(c,o)})},
+      onSnapshot:function(cb,eb){return suscribirA(c,{cb:cb,snap:function(){return snapCol(c,o)}},eb)}
+    };
+  }
+  // tiempo real: los cambios de otras personas aparecen sin recargar
+  try{
+    SB.channel("colegio-"+cid)
+      .on("postgres_changes",{event:"*",schema:"public",table:"docs",filter:"colegio_id=eq."+cid},function(p){
+        var n=p.eventType==="DELETE"?p.old:p.new;if(!n||!n.col||!cargado[n.col])return;
+        var c=n.col;cache[c]=cache[c]||{};
+        if(p.eventType==="DELETE")delete cache[c][n.id];else cache[c][n.id]=n.data;
+        avisar(c);
+      })
+      .on("postgres_changes",{event:"*",schema:"public",table:"perfiles",filter:"colegio_id=eq."+cid},function(){
+        if(cargado.roles){delete cargado.roles;cargar("roles").then(function(){avisar("roles")},function(){})}
+        if(ADMIN)cargarMiembros();
+      })
+      .subscribe();
+  }catch(e){}
+  return{
+    collection:function(c){return colRef(c)},
+    doc:function(path){var i=String(path).indexOf("/");return docRef(path.slice(0,i),path.slice(i+1))}
+  };
+}
+
+/* ---------- miembros: aprobar, rechazar y asignar cargo (solo organizadores) ---------- */
+function pendCount(){return MEM.filter(function(p){return p.estado==="pendiente"}).length}
+async function cargarMiembros(){
+  if(!SB||!ADMIN)return;
+  try{MEM=(await rpc("listar_miembros"))||[];MEMERR=""}catch(e){MEMERR=gerr(e)}
+  soft();
+}
+async function cargarCodigo(){try{MYCODE=(await rpc("codigo_mi_colegio"))||""}catch(e){}soft()}
+function codigoCard(){
+  if(!SB||!MYP||!isOrg())return"";
+  return'<div class="rs gcode"><b>Código del colegio</b><p class="hint">Compártelo con estudiantes y participantes para que creen su cuenta en <b>'+esc(colegioNombre())+'</b>. Cada persona nueva queda pendiente hasta que la apruebes.</p><div class="gcv"><code>'+(MYCODE?esc(MYCODE):"…")+'</code></div><div class="ctl"><button data-ac="c_copy">Copiar código</button><button data-ac="c_regen">Generar código nuevo</button></div></div>';
+}
+function cargoPanel(p){
+  var ks=Object.keys(RL),tn=allTeams();
+  return'<div class="mpan"><label for="m_cargo">¿Qué cargo le pones a '+esc(p.nombre)+'?</label><div class="row"><select id="m_cargo" data-ac="m_cargo">'+ks.map(function(k){return'<option value="'+k+'"'+(k===APR.cargo?" selected":"")+'>'+esc(RL[k][0])+'</option>'}).join("")+'</select></div>'+
+  (wantsTeam(APR.cargo)?'<label for="m_equipo">Equipo</label><div class="row"><input type="text" id="m_equipo" data-ac="m_equipo" list="m_tl" maxlength="60" placeholder="Nombre del equipo" value="'+esc(APR.equipo||"")+'"></div><datalist id="m_tl">'+tn.map(function(n){return'<option value="'+esc(n)+'">'}).join("")+'</datalist>':"")+
+  '<div class="ctl"><button class="pri" data-ac="m_aprobar">Aprobar</button><button data-ac="m_cancelar">Cancelar</button></div></div>';
+}
+function mRow(p){
+  var pe=p.estado==="pendiente",open=APR&&APR.id===p.id;
+  var h='<div class="rs mrw"><div class="pl"><span class="av">'+esc(String(p.nombre||"?").slice(0,1).toUpperCase())+'</span><span class="pn">'+esc(p.nombre)+(p.id===UID?' <small>Tú</small>':"")+'<br><span class="hint">'+esc(p.email||"")+'</span></span><span class="tag">'+(pe?"Pendiente":esc((RL[p.rol]||[p.rol])[0])+(p.equipo?" de "+esc(p.equipo):""))+'</span></div>';
+  if(open)h+=cargoPanel(p);
+  else if(pe)h+='<div class="mact"><button class="mok" data-ac="m_ok" data-id="'+esc(p.id)+'" aria-label="Aprobar a '+esc(p.nombre)+'">✓</button><button class="mno" data-ac="m_no" data-id="'+esc(p.id)+'" aria-label="Rechazar a '+esc(p.nombre)+'">✕</button></div>';
+  else h+='<div class="mact"><button data-ac="m_cambiar" data-id="'+esc(p.id)+'">Cambiar cargo</button></div>';
+  return h+'</div>';
+}
+function miembrosHtml(){
+  if(!SB||!MYP||!isOrg())return"";
+  var pe=MEM.filter(function(p){return p.estado==="pendiente"}),ok=MEM.filter(function(p){return p.estado!=="pendiente"});
+  return(MEMERR?'<div class="rs"><p class="hint">'+esc(MEMERR)+'</p></div>':"")+
+    '<h2>Pendientes de aprobar ('+pe.length+')</h2>'+(pe.length?pe.map(mRow).join(""):'<div class="rs"><p class="empty">Nadie espera aprobación.</p></div>')+
+    '<h2>Miembros aprobados ('+ok.length+')</h2>'+(ok.length?ok.map(mRow).join(""):'<div class="rs"><p class="empty">Todavía no hay miembros.</p></div>');
+}
+function vMiembros(){
+  if(!SB||!MYP||!isOrg())return'<div class="rs"><p class="empty">Solo el organizador puede ver los miembros.</p></div>';
+  return codigoCard()+miembrosHtml();
+}
+
+/* ---------- eventos de la pantalla de acceso y de miembros ---------- */
+document.addEventListener("click",async function(e){
+  var b=e.target&&e.target.closest&&e.target.closest("[data-ac]");
+  if(!b||b.disabled||!b.dataset||!b.dataset.ac)return;
+  var a=b.dataset.ac,d=b.dataset,p;
+  try{
+    if(a==="modo"){GMODE=d.m;GERR="";gateRender()}
+    else if(a==="org"){GORG=!GORG;GOPEN=false;GERR="";gateRender()}
+    else if(a==="col_abrir"){GOPEN=!GOPEN;gateRender()}
+    else if(a==="col_pick"){GCOL=d.id;GCOLN=d.n;GNEW=false;GOPEN=false;GERR="";gateRender()}
+    else if(a==="col_nuevo"){GNEW=true;GCOL="";GCOLN="";GOPEN=false;GERR="";gateRender()}
+    else if(a==="entrar")await iniciarSesion();
+    else if(a==="crear")await crearCuenta();
+    else if(a==="completar")await completarRegistro();
+    else if(a==="salir")await cerrarSesion();
+    else if(a==="m_ok"){
+      p=MEM.filter(function(x){return x.id===d.id})[0];if(!p)return;
+      if(!confirm("¿Seguro que quieres aprobar a "+p.nombre+"?"))return;
+      APR={id:p.id,cargo:"jugador",equipo:""};render();
+    }
+    else if(a==="m_no"){
+      p=MEM.filter(function(x){return x.id===d.id})[0];if(!p)return;
+      if(!confirm("¿Rechazar a "+p.nombre+"? Su cuenta se eliminará de la base de datos y no podrá entrar."))return;
+      await rpc("rechazar_miembro",{p_uid:p.id});toast("Entrada rechazada y cuenta eliminada");await cargarMiembros();
+    }
+    else if(a==="m_cambiar"){p=MEM.filter(function(x){return x.id===d.id})[0];if(!p)return;APR={id:p.id,cargo:p.rol,equipo:p.equipo||""};render()}
+    else if(a==="m_cancelar"){APR=null;render()}
+    else if(a==="m_cargo"){}
+    else if(a==="m_aprobar"){
+      if(!APR)return;p=MEM.filter(function(x){return x.id===APR.id})[0];if(!p)return;
+      var eq=(APR.equipo||"").trim();
+      if(wantsTeam(APR.cargo)&&!eq){toast("Escribe el equipo de esta persona.");return}
+      await rpc("aprobar_miembro",{p_uid:p.id,p_cargo:APR.cargo,p_equipo:eq});
+      if(APR.cargo==="jugador"&&eq)addToRoster(p.nombre,eq,p.id);
+      logAct(null,"Miembro aprobado",p.nombre+": "+APR.cargo+(eq?" de "+eq:""));
+      toast("Cargo asignado a "+p.nombre);APR=null;await cargarMiembros();
+    }
+    else if(a==="c_copy"){try{await navigator.clipboard.writeText(MYCODE);toast("Código copiado")}catch(x){toast("No se pudo copiar")}}
+    else if(a==="c_regen"){
+      if(!confirm("El código anterior dejará de servir. ¿Generar uno nuevo?"))return;
+      MYCODE=await rpc("regenerar_codigo_colegio");toast("Código nuevo generado");render();
+    }
+  }catch(err){toast(gerr(err))}
+});
+document.addEventListener("change",function(e){
+  var x=e.target,d=x&&x.dataset;
+  if(d&&d.ac==="m_cargo"&&APR){APR.cargo=x.value;render()}
+});
+document.addEventListener("input",function(e){
+  var x=e.target,d=x&&x.dataset;if(!d)return;
+  if(d.gf)GF[d.gf]=x.value;
+  else if(d.ac==="m_equipo"&&APR)APR.equipo=x.value;
+});
+document.addEventListener("keydown",function(e){
+  if(e.key!=="Enter"||!e.target||!e.target.dataset||!e.target.dataset.gf)return;
+  var b=document.querySelector("[data-ac=entrar],[data-ac=crear],[data-ac=completar]");if(b)b.click();
+});

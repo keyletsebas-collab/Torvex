@@ -1,23 +1,29 @@
 # Torneos escolares
 
 Plataforma web para organizar y seguir torneos escolares de **Baseball5**, **Basket 3x3** y **Voleibol**.
-Cada deporte tiene su propia página y funciona por **temporadas**: para jugar otro torneo se crea una temporada nueva.
+Cada deporte tiene su propia página y funciona por **ediciones**: para jugar otro torneo se crea una edición nueva.
 
 ## Qué puede hacer
 
-- **Páginas por deporte:** Partidos, Tabla, Equipos, Fechas, Stats, Historial, Reglas y Ajustes.
-- **Formatos de competición:** liga (con ida y vuelta), eliminación directa (con series "mejor de 3/5/7" y tercer lugar), fase de grupos + llaves y doble eliminación.
-- **Marcador en vivo** con reglas propias de cada deporte, línea de tiempo, estadísticas por jugador, tarjetas y suspensiones.
-- **Estados de partido:** programado, en curso, finalizado, aplazado y cancelado, con filtros por estado y equipo.
-- **Tablas automáticas** con puntos y desempates configurables.
-- **Calendario automático** por canchas y horarios.
-- **Panel de administración** (organizadores y árbitros): resumen con avisos, partidos en vivo, de hoy, sin fecha y aplazados, temporadas, personas y solicitudes, noticias, historial de cambios y respaldos.
-- **Roles:** organizador, árbitro, entrenador, jugador y espectador.
-- **Historial de cambios** y confirmación antes de corregir resultados oficiales.
-- **Escudos de equipos** (los suben el organizador o el entrenador) que aparecen en tarjetas, tablas, marcador y listas.
-- **Noticias y anuncios** con borrador y publicación, autor y fecha.
-- **Historial de temporadas** con palmarés (títulos por equipo), campeón, subcampeón, tercer lugar y totales.
-- Asistencia, comentarios, predicciones, perfiles con foto, inscripciones, diplomas (PNG y PDF), compartir por WhatsApp y pantalla grande.
+**Sitio público** (tema claro, menú lateral):
+- **Inicio:** tarjetas de resumen, torneos activos, actividad reciente, próximos partidos en tarjetas, resultados recientes, clasificaciones destacadas y deportes.
+- **Torneos:** todas las ediciones con filtros por deporte y rama.
+- **Deportes:** Baseball5, Basket 3x3 y Voleibol, cada uno con su lógica, sus reglas y sus dos ramas (femenino y masculino).
+- **Calendario**, **Resultados** y **Clasificaciones** con filtros por fecha, deporte, rama, torneo, equipo y estado.
+- **Equipos** con escudo y ficha: resultados y estadísticas (la plantilla solo la ven participantes con cuenta).
+- **Noticias y anuncios** con borrador y publicación, e **Información de la liga**.
+- **Acceso** con la cuenta de Claude.
+
+**Panel de administración** (tema oscuro, menú lateral agrupado con contadores): resumen con tarjetas, próximos eventos, clasificación, acciones rápidas y avisos; torneos y ediciones, deportes y reglamentos, equipos y jugadores, calendarios y partidos, resultados y marcadores, clasificaciones y estadísticas, noticias, usuarios y permisos, historial y configuración (incluye respaldos).
+
+**Funciones:**
+- Formatos: liga (con ida y vuelta), eliminación directa (con series y tercer lugar), grupos + llaves y doble eliminación.
+- Marcador en vivo con reglas por deporte, línea de tiempo, estadísticas por jugador, tarjetas y suspensiones.
+- Estados de partido: programado, en curso, finalizado, aplazado y cancelado.
+- Tablas automáticas con puntos y desempates configurables, y calendario automático por canchas.
+- **Modo manager y capitán** (pantalla **Mi equipo**): pendientes, próximos partidos con confirmación de asistencia, plantilla y alineación. El manager edita todo su equipo; el capitán arma la alineación y confirma asistencia; el jugador solo mira.
+- **Roles:** superadministrador, coordinador deportivo, anotador, árbitro, manager de equipo, capitán, jugador y visitante.
+- Historial de cambios, confirmación al corregir resultados oficiales, escudos, comentarios, predicciones, perfiles, inscripciones, diplomas (PNG y PDF), compartir por WhatsApp y pantalla grande.
 
 ## Estructura
 
@@ -25,7 +31,7 @@ Cada deporte tiene su propia página y funciona por **temporadas**: para jugar o
 src/index.template.html   Esqueleto de la página
 src/styles.css            Estilos
 src/js/                   Código por tema (01-estado, 02-formatos, 03-clasificacion, 04-vivo,
-                          05-vistas, 06-social-admin, 07-admin, 07-exportar, 08-app)
+                          05-vistas, 06-social-admin, 07-admin, 07-exportar, 07-publico, 08-app)
 build.js                  Une todo en un solo index.html
 index.html                Página lista para publicar (se genera; no se edita a mano)
 tests/                    Pruebas automáticas
@@ -44,13 +50,18 @@ npm test
 
 `npm test` primero genera `index.html` desde `src/` y luego corre las pruebas.
 
-Las pruebas cargan `index.html` en un entorno simulado y comprueban formatos, tablas, desempates, permisos, estados, historial, marcador en vivo y generación de PDF. **No prueban el diseño visual ni el funcionamiento real en un navegador con varias personas.** Eso hay que revisarlo a mano.
+Las pruebas cargan `index.html` y, además de la lógica, recorren los flujos completos de organizador, árbitro y espectador y revisan que ningún botón quede sin función, que no haya etiquetas sin cerrar ni ids repetidos y que las acciones comprueben el permiso.
+Las pruebas cargan `index.html` en un entorno simulado y comprueban formatos, tablas, desempates, permisos, estados, historial, marcador en vivo y generación de PDF. **No prueban el diseño visual ni el funcionamiento real en un navegador con varias personas.** Eso se revisa a mano con `docs/prueba-manual.md`.
 
 ## Cómo funciona la publicación
 
-La app **no tiene inicio de sesión**: siempre funciona en **modo local**. Los datos se guardan solo en el dispositivo (navegador) donde se usa, y quien la abre tiene permisos de organizador. Se puede publicar como página estática (por ejemplo GitHub Pages) o abrir `index.html` directamente.
+La app está pensada para publicarse como página de claude.ai. Esa plataforma le da tres cosas:
 
-Si la página se publica en claude.ai, solo se usa su servicio de **descargas** de archivos. Ya no se usan la cuenta de Claude ni la base de datos compartida.
+- **Inicio de sesión** con la cuenta de Claude de cada persona.
+- **Base de datos compartida** (las colecciones están descritas en `docs/arquitectura.md`).
+- **Descargas** de archivos.
+
+Si abres `index.html` directamente en un navegador o lo subes a GitHub Pages, funciona en **modo local**: los datos se guardan solo en ese dispositivo, sin cuentas ni roles reales.
 
 ## Límites conocidos (léelos antes de usarlo con alumnos)
 
@@ -58,7 +69,7 @@ Si la página se publica en claude.ai, solo se usa su servicio de **descargas** 
 - El historial de cambios **no es a prueba de manipulaciones**.
 - No se puede saber con certeza si alguien sin cuenta de Claude puede abrir la página. Compruébalo con una ventana privada.
 - Los **borradores de noticias** se ocultan en la pantalla a quien no es organizador, pero no están protegidos en el servidor.
-- Los escudos son imágenes pequeñas (96 px) guardadas en la base compartida; cada temporada tiene un espacio limitado para ellos.
+- Los escudos son imágenes pequeñas (96 px) guardadas en la base compartida; cada edición tiene un espacio limitado para ellos.
 - Los datos de jugadores (nombres y fotos) solo se ven con cuenta y rol de participante. No publiques datos personales innecesarios.
 
 ## Cómo agregar un deporte

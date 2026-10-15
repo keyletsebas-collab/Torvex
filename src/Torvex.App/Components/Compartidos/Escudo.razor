@@ -1,0 +1,19 @@
+@* Escudo del equipo: inicial sobre un tono de la paleta (varía solo la luminosidad para seguir siendo monocromático). *@
+<span class="escudo @(Grande ? "g" : "")" style="--esc-l:@(Luz)%" title="@Nombre">@Inicial</span>
+
+@code {
+    [Parameter] public string? Nombre { get; set; }
+    [Parameter] public bool Grande { get; set; }
+
+    string Inicial => string.IsNullOrWhiteSpace(Nombre) || Nombre == Formatos.Bye ? "?" : Nombre.Trim()[..1].ToUpperInvariant();
+
+    int Luz
+    {
+        get
+        {
+            var h = 0;
+            foreach (var c in Nombre ?? "") h = (h * 31 + c) & 0xFFFF;
+            return 80 + (h % 5) * 3;   // 80..92
+        }
+    }
+}

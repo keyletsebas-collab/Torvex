@@ -1,0 +1,126 @@
+@inherits LayoutComponentBase
+@implements IDisposable
+@inject Cuentas Cuentas
+@inject AlmacenTorneos Torneos
+@inject Temas Temas
+@inject Avisos Avisos
+@inject IJSRuntime JS
+
+@if (Cuentas.Estado == EstadoAcceso.Ok)
+{
+    <div class="shell">
+        <aside class="side" aria-label="Menú principal">
+            <div class="marca">
+                <span class="marca-logo"><Icono Nombre="trophy" /></span>
+                <span><b>Torvex</b><small>@Cuentas.ColegioNombre</small></span>
+            </div>
+            <nav class="nav">
+                <div class="nav-sec">Explorar</div>
+                <NavLink class="nav-item" href="" Match="NavLinkMatch.All" ActiveClass="active"><Icono Nombre="home" />Inicio</NavLink>
+                <NavLink class="nav-item" href="torneos" ActiveClass="active"><Icono Nombre="trophy" />Torneos</NavLink>
+                <NavLink class="nav-item" href="vivo" ActiveClass="active"><Icono Nombre="bolt" />En vivo
+                    @if (EnVivo > 0) { <span class="insignia">@EnVivo</span> }
+                </NavLink>
+                @if (Cuentas.EsOrganizador)
+                {
+                    <div class="nav-sec">Administración</div>
+                    <NavLink class="nav-item" href="miembros" ActiveClass="active"><Icono Nombre="users" />Miembros
+                        @if (Pendientes > 0) { <span class="insignia">@Pendientes</span> }
+                    </NavLink>
+                }
+                <div class="nav-sec">Cuenta</div>
+                <NavLink class="nav-item" href="ajustes" ActiveClass="active"><Icono Nombre="settings" />Ajustes</NavLink>
+            </nav>
+            <div class="side-pie">
+                <NavLink class="yo" href="ajustes">
+                    <span class="avatar">@Inicial</span>
+                    <span><b>@Cuentas.Perfil?.Nombre</b><small>@Nombres.Rol(Cuentas.Rol)</small></span>
+                </NavLink>
+            </div>
+        </aside>
+
+        <div class="main">
+            @Body
+        </div>
+
+        <nav class="bottom" aria-label="Navegación">
+            <NavLink href="" Match="NavLinkMatch.All" ActiveClass="active"><Icono Nombre="home" />Inicio</NavLink>
+            <NavLink href="torneos" ActiveClass="active"><Icono Nombre="trophy" />Torneos</NavLink>
+            <NavLink href="vivo" ActiveClass="active"><Icono Nombre="bolt" />En vivo
+                @if (EnVivo > 0) { <span class="insignia">@EnVivo</span> }
+            </NavLink>
+            @if (Cuentas.EsOrganizador)
+            {
+                <NavLink href="miembros" ActiveClass="active"><Icono Nombre="users" />Miembros
+                    @if (Pendientes > 0) { <span class="insignia">@Pendientes</span> }
+                </NavLink>
+            }
+            <NavLink href="ajustes" ActiveClass="active"><Icono Nombre="settings" />Ajustes</NavLink>
+        </nav>
+    </div>
+}
+else
+{
+    <Acceso />
+}
+
+<AvisosHost />
+
+@code {
+    bool _orgActivo;
+    CancellationTokenSource? _ciclo;
+
+    string Inicial => (Cuentas.Perfil?.Nombre ?? "?").Trim().Length > 0 ? Cuentas.Perfil!.Nombre.Trim()[..1].ToUpperInvariant() : "?";
+    int EnVivo => Vivo.EnCurso(Torneos.Lista).Count;
+    int Pendientes => Cuentas.Miembros.Count(m => m.Pendiente);
+
+    protected override async Task OnInitializedAsync()
+    {
+        Cuentas.Cambio += Refrescar;
+        Torneos.Cambio += Refrescar;
+        Torneos.Falla += AlFallar;
+        Temas.Cambio += Refrescar;
+        await Cuentas.InicializarAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) await Temas.AplicarAsync(JS);
+    }
+
+    void AlFallar(string mensaje) => Avisos.Toast(mensaje);
+
+    void Refrescar()
+    {
+        // los organizadores consultan los miembros pendientes cada 10 segundos
+        if (Cuentas.Estado == EstadoAcceso.Ok && Cuentas.EsOrganizador && !_orgActivo)
+        {
+            _orgActivo = true;
+            _ciclo = new CancellationTokenSource();
+            var token = _ciclo.Token;
+            _ = Task.Run(async () =>
+            {
+                try { await Cuentas.CargarCodigoAsync(); } catch { }
+                while (!token.IsCancellationRequested)
+                {
+                    try { await Cuentas.CargarMiembrosAsync(); } catch { }
+                    try { await Task.Delay(10000, token); } catch { return; }
+                }
+            }, token);
+        }
+        else if (Cuentas.Estado != EstadoAcceso.Ok && _orgActivo)
+        {
+            _orgActivo = false; _ciclo?.Cancel(); _ciclo = null;
+        }
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        Cuentas.Cambio -= Refrescar;
+        Torneos.Cambio -= Refrescar;
+        Torneos.Falla -= AlFallar;
+        Temas.Cambio -= Refrescar;
+        _ciclo?.Cancel();
+    }
+}

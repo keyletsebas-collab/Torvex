@@ -6,11 +6,13 @@ Una sola página (`index.html`) que dibuja todo con JavaScript. No usa librería
 
 ## Modelo de datos
 
-Una **temporada** es un documento con estos campos principales (colección `torneos`):
+En la pantalla se habla de **ediciones** (antes «temporadas»). Por compatibilidad, el archivo de respaldo conserva la clave `temporadas`, y en el código las funciones usan el nombre en inglés (`seasons`, `makeSeason`).
+
+Una **edición** es un documento con estos campos principales (colección `torneos`):
 
 | Campo | Qué es |
 |---|---|
-| `id`, `name`, `sport` | Identificador, nombre y deporte (`beis`, `bas3`, `vol`) |
+| `id`, `name`, `sport`, `rama` | Identificador, nombre, deporte (`beis`, `bas3`, `vol`) y rama (`f` femenino o `m` masculino). Las ediciones antiguas sin `rama` se ocultan a los demás hasta que el organizador la asigne |
 | `type` | Formato: `liga`, `elim`, `grupos` o `dele` |
 | `teams` | Nombres de los equipos |
 | `ro` | Plantillas: `ro[equipo] = { coach, pl: [{ n, num, pos, st, cap }] }` |
@@ -26,12 +28,13 @@ Un **partido** tiene `a`, `b` (equipos), `sa`, `sb` (marcador), `w` (ganador en 
 
 | Colección | Para qué | Lectura | Escritura |
 |---|---|---|---|
-| `torneos` | Temporadas | ver | colaborar |
+| `torneos` | Ediciones | ver | colaborar |
 | `roles` | Rol de cada persona | ver | editor |
 | `solicitudes` | Peticiones de rol | editor | editor (cada persona la suya, colaborar) |
 | `inscripciones` | Peticiones de equipo | colaborar | colaborar |
+| `config` | Datos de la liga y reglamentos (documento `liga`) | ver | colaborar (solo superadmin en pantalla) |
 | `anuncios` | Noticias (campo `st`: borrador o publicado) | ver | colaborar |
-| `escudos` | Escudos de equipos, un documento por temporada (`logos[equipo]`) | ver | colaborar |
+| `escudos` | Escudos de equipos, un documento por edición (`logos[equipo]`) | ver | colaborar |
 | `historial` | Registro de cambios importantes | colaborar | colaborar |
 | `comentarios`, `asistencia` | Interacción en partidos | ver | colaborar |
 | `perfiles`, `predicciones` | Perfil y votos | ver | editor (cada persona el suyo, colaborar) |
@@ -41,11 +44,11 @@ Un **partido** tiene `a`, `b` (equipos), `sa`, `sb` (marcador), `w` (ganador en 
 ## Permisos: pantalla frente a servidor
 
 - **En el servidor** solo existen tres niveles: ver, colaborar y editor.
-- **En la pantalla** se aplican los roles (`organizador`, `arbitro`, `entrenador`, `jugador`, `espectador`) con las funciones `isOrg`, `canScore`, `canRoster` y `pub`.
+- **En la pantalla** se aplican los roles, y además cada acción comprueba el permiso antes de ejecutarse (`allowed` en `01-estado.js`) (`organizador`, `arbitro`, `entrenador`, `jugador`, `espectador`) con las funciones `isOrg`, `canScore`, `canRoster` y `pub`.
 
 Por eso un colaborador con conocimientos técnicos podría saltarse un rol. Para seguridad real se necesita un backend con reglas por fila. Si se migra a Supabase, el plan sería:
 
-1. Tablas: `usuarios`, `deportes`, `temporadas`, `equipos`, `jugadores`, `partidos`, `eventos`, `noticias` e `historial`.
+1. Tablas: `usuarios`, `deportes`, `ediciones`, `equipos`, `jugadores`, `partidos`, `eventos`, `noticias` e `historial`.
 2. Autenticación por correo con contraseña manejada por el proveedor.
 3. Reglas de acceso por fila según el rol.
 4. Historial escrito solo por el servidor.
@@ -56,13 +59,15 @@ Costo: reescribir la capa de guardado (hoy hay un `save()` y suscripciones en `b
 
 ## Mapa del código (`src/js/`)
 
-- **01-estado:** datos base, `load`, `save`, permisos (`myRole`, `isOrg`, `canScore`, `canRoster`, `pub`), temporadas (`seasons`, `pickSeason`).
+- **01-estado:** datos base, `load`, `save`, permisos (`myRole`, `isOrg`, `canScore`, `canRoster`, `pub`), ediciones (`seasons`, `pickSeason`).
 - **02-formatos:** `generate`, `genGroups`, `genKO`, `genDE`, `setWin`, `deWin`, `serie`.
 - **03-clasificacion:** `table`, `rank`, `awardPts`, `champ`, `estOf`, `discipline`, `statsOf`.
 - **04-vivo:** `newLive`, `liveAct`, `finishLive`, `vVivo`, línea de tiempo.
 - **05-vistas:** pantallas (`render`, `vInicio`, `vDep`, `vTorneo`, tarjetas, tablas, filtros, escudos).
 - **06-social-admin:** roles (`viewR`), historial de cambios (`logAct`, `logHtml`), calendario automático, comentarios, predicciones, perfiles, inscripciones.
-- **07-admin:** panel de administración (`vAdmin`), respaldo y restauración, noticias.
+- **07-publico:** íconos (`ICO`, `ic`), menú lateral agrupado y páginas públicas (torneos, deportes, calendario, resultados, clasificaciones, equipos, noticias, información de la liga).
+- **07-manager:** modo manager y capitán (`vMiEquipo`, asistencia por partido, alineación).
+- **07-admin:** panel de administración oscuro (`vAdmin`), respaldo y restauración, noticias.
 - **07-exportar:** compartir, diplomas, imágenes y PDF.
 - **08-app:** `boot` (usuario, base de datos y suscripciones), eventos y arranque.
 
