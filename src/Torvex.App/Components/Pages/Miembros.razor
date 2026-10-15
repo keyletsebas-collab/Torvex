@@ -1,0 +1,138 @@
+@page "/miembros"
+@implements IDisposable
+@inject Cuentas Cuentas
+@inject AlmacenTorneos Torneos
+@inject Avisos Avisos
+
+<EncabezadoPagina Titulo="Miembros" Subtitulo="Aprueba a quienes piden entrar y asigna su cargo." />
+
+<div class="page">
+    @if (!Cuentas.EsOrganizador)
+    {
+        <div class="card vacio"><div class="vacio-ic"><Icono Nombre="shield" /></div><b>Solo para organizadores</b>Esta sección es del personal que administra el colegio.</div>
+    }
+    else
+    {
+        <div class="card">
+            <h3>Código del colegio</h3>
+            <p class="hint">Compártelo con estudiantes y participantes para que creen su cuenta en <b>@Cuentas.ColegioNombre</b>. Cada persona nueva queda pendiente hasta que la apruebes.</p>
+            <div class="codigo">@(string.IsNullOrEmpty(Cuentas.CodigoColegio) ? "…" : Cuentas.CodigoColegio)</div>
+            <div class="fila">
+                <button class="btn" @onclick="Copiar"><Icono Nombre="copy" />Copiar código</button>
+                <button class="btn fantasma" @onclick="Regenerar">Generar código nuevo</button>
+            </div>
+        </div>
+
+        <h2>Pendientes de aprobar (@Pendientes.Count)</h2>
+        @if (Pendientes.Count == 0)
+        {
+            <div class="card vacio"><div class="vacio-ic"><Icono Nombre="check" /></div><b>Nadie espera aprobación</b>Las solicitudes nuevas aparecerán aquí.</div>
+        }
+        else
+        {
+            <div class="lista">@foreach (var m in Pendientes) { @Fila(m) }</div>
+        }
+
+        <h2>Miembros aprobados (@Aprobados.Count)</h2>
+        @if (Aprobados.Count == 0)
+        {
+            <div class="card vacio"><b>Todavía no hay miembros</b></div>
+        }
+        else
+        {
+            <div class="lista">@foreach (var m in Aprobados) { @Fila(m) }</div>
+        }
+    }
+</div>
+
+@code {
+    string? abierto;
+    string cargo = "jugador", equipo = "";
+
+    List<Miembro> Pendientes => Cuentas.Miembros.Where(m => m.Pendiente).ToList();
+    List<Miembro> Aprobados => Cuentas.Miembros.Where(m => !m.Pendiente).ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Cuentas.Cambio += Refrescar;
+        try { await Cuentas.CargarMiembrosAsync(); await Cuentas.CargarCodigoAsync(); } catch (Exception e) { Avisos.Toast(Mensajes.Traducir(e)); }
+    }
+
+    void Refrescar() => InvokeAsync(StateHasChanged);
+    public void Dispose() => Cuentas.Cambio -= Refrescar;
+
+    async Task Copiar()
+    {
+        try { await Clipboard.Default.SetTextAsync(Cuentas.CodigoColegio); Avisos.Toast("Código copiado"); }
+        catch { Avisos.Toast("No se pudo copiar"); }
+    }
+
+    async Task Regenerar()
+    {
+        if (!await Avisos.ConfirmarAsync("Código nuevo", "El código anterior dejará de servir. ¿Generar uno nuevo?", "Generar")) return;
+        try { await Cuentas.RegenerarCodigoAsync(); Avisos.Toast("Código nuevo generado"); } catch (Exception e) { Avisos.Toast(Mensajes.Traducir(e)); }
+    }
+
+    async Task Aceptar(Miembro m)
+    {
+        if (!await Avisos.ConfirmarAsync("Aprobar", $"¿Seguro que quieres aprobar a {m.Nombre}?", "Sí, aprobar")) return;
+        abierto = m.Id; cargo = "jugador"; equipo = "";
+    }
+
+    async Task Rechazar(Miembro m)
+    {
+        if (!await Avisos.ConfirmarAsync("Rechazar", $"¿Rechazar a {m.Nombre}? Su cuenta se eliminará de la base de datos y no podrá entrar.", "Rechazar", true)) return;
+        try { await Cuentas.RechazarAsync(m.Id); Avisos.Toast("Entrada rechazada y cuenta eliminada"); } catch (Exception e) { Avisos.Toast(Mensajes.Traducir(e)); }
+    }
+
+    void Cambiar(Miembro m) { abierto = m.Id; cargo = m.Rol; equipo = m.Equipo ?? ""; }
+
+    async Task Confirmar(Miembro m)
+    {
+        var eq = equipo.Trim();
+        if (Nombres.RolPideEquipo(cargo) && eq == "") { Avisos.Toast("Escribe el equipo de esta persona."); return; }
+        try
+        {
+            await Cuentas.AprobarAsync(m.Id, cargo, Nombres.RolPideEquipo(cargo) ? eq : "");
+            Avisos.Toast("Cargo asignado a " + m.Nombre);
+            abierto = null;
+        }
+        catch (Exception e) { Avisos.Toast(Mensajes.Traducir(e)); }
+    }
+
+    RenderFragment Fila(Miembro m) => @<div class="miembro @(m.Pendiente ? "pend" : "")">
+        <span class="avatar">@(string.IsNullOrEmpty(m.Nombre) ? "?" : m.Nombre[..1].ToUpperInvariant())</span>
+        <span class="info"><b>@m.Nombre@if (m.Id == Cuentas.Perfil?.Id) { <span class="tag" style="margin-left:6px">Tú</span> }</b><small>@m.Email</small></span>
+        <span class="tag @(m.Pendiente ? "solido" : "acento")">@(m.Pendiente ? "Pendiente" : Nombres.Rol(m.Rol) + (string.IsNullOrEmpty(m.Equipo) ? "" : " de " + m.Equipo))</span>
+        @if (abierto == m.Id)
+        {
+            <div class="panel-cargo">
+                <label class="etq" for="@("cargo" + m.Id)">¿Qué cargo le pones a @m.Nombre?</label>
+                <select id="@("cargo" + m.Id)" class="campo" @bind="cargo">
+                    @foreach (var r in Nombres.Roles) { <option value="@r">@Nombres.Rol(r)</option> }
+                </select>
+                @if (Nombres.RolPideEquipo(cargo))
+                {
+                    <label class="etq" for="@("eq" + m.Id)">Equipo</label>
+                    <input id="@("eq" + m.Id)" class="campo" list="equipos-lista" maxlength="60" placeholder="Nombre del equipo" @bind="equipo" @bind:event="oninput" />
+                    <datalist id="equipos-lista">@foreach (var n in Torneos.Lista.SelectMany(t => t.Teams).Distinct()) { <option value="@n"></option> }</datalist>
+                }
+                <div class="fila fin" style="margin-top:14px">
+                    <button class="btn fantasma" @onclick="() => abierto = null">Cancelar</button>
+                    <button class="btn pri" @onclick="() => Confirmar(m)">Aprobar</button>
+                </div>
+            </div>
+        }
+        else if (m.Pendiente)
+        {
+            <span class="aprobar">
+                <button class="btn-si" aria-label="Aprobar a @m.Nombre" @onclick="() => Aceptar(m)">✓</button>
+                <button class="btn-no" aria-label="Rechazar a @m.Nombre" @onclick="() => Rechazar(m)">✕</button>
+            </span>
+        }
+        else if (m.Id != Cuentas.Perfil?.Id)
+        {
+            <button class="btn sm" @onclick="() => Cambiar(m)">Cambiar cargo</button>
+        }
+    </div>;
+}

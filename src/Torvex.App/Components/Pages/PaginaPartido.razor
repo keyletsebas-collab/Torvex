@@ -1,0 +1,375 @@
+@page "/partido/{Id:long}/{R}/{I:int}"
+@implements IDisposable
+@inject Cuentas Cuentas
+@inject AlmacenTorneos Torneos
+@inject Avisos Avisos
+
+@if (T == null || P == null || M == null)
+{
+    <EncabezadoPagina Titulo="Partido" Subtitulo="@(Torneos.Cargado ? "No se encontró este partido." : "Cargando…")">
+        <Acciones><a class="btn fantasma" href="torneos"><Icono Nombre="back" />Torneos</a></Acciones>
+    </EncabezadoPagina>
+    <div class="page"><div class="card vacio"><div class="vacio-ic"><Icono Nombre="bolt" /></div><b>@(Torneos.Cargado ? "Partido no disponible" : "Cargando…")</b></div></div>
+}
+else
+{
+    var L = M.Live;
+    var vivo = L is { St: "on" };
+    var fin = L is { St: "fin" } || (L == null && Clasificacion.Estado(T, M) == "finalizado");
+    <EncabezadoPagina Titulo="@($"{Vista.Nombre(P.A)} vs {Vista.Nombre(P.B)}")" Subtitulo="@Subtitulo">
+        <Acciones><a class="btn fantasma" href="torneo/@T.Id"><Icono Nombre="back" />Torneo</a></Acciones>
+    </EncabezadoPagina>
+
+    <div class="page">
+        @if (P.Bo > 1 && G == null)
+        {
+            @Serie()
+        }
+        else
+        {
+            @if (G != null) { <p class="hint" style="margin-bottom:10px"><a href="@Vista.Ruta(T, R, I)">← Serie al mejor de @P.Bo</a> · Juego @(G + 1)</p> }
+
+            <div class="marcador">
+                <div class="estado">
+                    @if (vivo) { <i class="punto-vivo"></i><span>En vivo</span> }
+                    else if (fin) { <span>Final</span> }
+                    else { <span>@(char.ToUpper(Clasificacion.Estado(T, M)[0]) + Clasificacion.Estado(T, M)[1..])</span> }
+                    @if (L != null && L.K == "vol") { <span>· sets ganados</span> }
+                </div>
+                <div class="lado">
+                    <div class="eqn"><Escudo Nombre="@P.A" Grande="true" /><span>@Vista.Nombre(P.A)</span></div>
+                    <div class="cifras num"><span>@(M.Sa ?? 0)</span><i>:</i><span>@(M.Sb ?? 0)</span></div>
+                    <div class="eqn"><Escudo Nombre="@P.B" Grande="true" /><span>@Vista.Nombre(P.B)</span></div>
+                </div>
+                @if (L != null) { @Detalle(L) }
+            </div>
+
+            @if (Cuentas.PuedeAnotar && P.A != null && P.B != null)
+            {
+                @if (L == null) { @SinMarcador() }
+                else if (vivo) { @Controles(L) }
+                else
+                {
+                    <div class="fila" style="margin-top:14px">
+                        <button class="btn" @onclick="Reabrir"><Icono Nombre="clock" />Reabrir partido</button>
+                    </div>
+                }
+            }
+            else if (L == null && !fin) { <p class="hint" style="margin-top:14px">El partido aún no empieza. Esta pantalla se actualiza sola.</p> }
+            else if (vivo) { <p class="hint" style="margin-top:14px">Marcador en vivo: se actualiza solo.</p> }
+
+            @if (Cuentas.EsOrganizador && !vivo) { @Programacion() }
+            @if (L?.Ev is { Count: > 0 } ev) { @Linea(ev) }
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public long Id { get; set; }
+    [Parameter] public string R { get; set; } = "";
+    [Parameter] public int I { get; set; }
+    [SupplyParameterFromQuery(Name = "g")] public int? G { get; set; }
+
+    string jugA = "", jugB = "";
+    int? manA, manB;
+    string _clave = "";
+    Timer? _reloj;
+
+    Torneo? T => Torneos.Por(Id);
+
+    Partido? P
+    {
+        get { try { return T == null ? null : Formatos.ObtenerPartido(T, R, I); } catch { return null; } }
+    }
+
+    Partido? M
+    {
+        get
+        {
+            var p = P; if (p == null) return null;
+            if (G != null) return p.G != null && G >= 0 && G < p.G.Count ? p.G[G.Value] : null;
+            return p;
+        }
+    }
+
+    string Subtitulo
+    {
+        get
+        {
+            var t = T!;
+            var ronda = t.Type == "liga" ? "Liga" : R.StartsWith("G") ? t.Gr[int.Parse(R[1..])].N : R == "T" ? "Tercer lugar" : R == "F" ? "Gran final"
+                : R.Length > 1 && (R[0] == 'W' || R[0] == 'L') && char.IsDigit(R[1]) ? (R[0] == 'W' ? "Ganadores" : "Perdedores") + " · ronda " + (int.Parse(R[1..]) + 1)
+                : int.TryParse(R, out var r) ? Vista.Ronda(r, t.Rounds.Count) : "";
+            return $"{(string.IsNullOrEmpty(t.Name) ? "Edición" : t.Name)} · {ronda}";
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        Torneos.Cambio += Refrescar;
+        _reloj = new Timer(_ => { if (M?.Live is { Run: true }) InvokeAsync(StateHasChanged); }, null, 500, 250);
+    }
+
+    protected override void OnParametersSet()
+    {
+        var k = $"{Id}/{R}/{I}/{G}";
+        if (k == _clave) return;
+        _clave = k; jugA = jugB = "";
+        manA = M?.Sa; manB = M?.Sb;
+    }
+
+    void Refrescar() => InvokeAsync(StateHasChanged);
+    public void Dispose() { Torneos.Cambio -= Refrescar; _reloj?.Dispose(); }
+
+    void Guardar() { if (T != null) Torneos.Guardar(T); }
+
+    // ----------------------------------------------------------------- series
+    RenderFragment Serie() => @<div>
+        <div class="marcador">
+            <div class="estado">Serie al mejor de @P!.Bo</div>
+            <div class="lado">
+                <div class="eqn"><Escudo Nombre="@P.A" Grande="true" /><span>@Vista.Nombre(P.A)</span></div>
+                <div class="cifras num"><span>@(P.Sa ?? 0)</span><i>:</i><span>@(P.Sb ?? 0)</span></div>
+                <div class="eqn"><Escudo Nombre="@P.B" Grande="true" /><span>@Vista.Nombre(P.B)</span></div>
+            </div>
+            @if (P.W != null) { <p class="sub">Ganador de la serie: <b>@P.W</b></p> }
+        </div>
+        <h2>Juegos</h2>
+        <div class="lista">
+            @for (var g = 0; g < (P.G?.Count ?? 0); g++)
+            {
+                var j = P.G![g]; var gi = g;
+                var e = Clasificacion.Estado(T!, j);
+                <a class="partido @(j.Live is { St: "on" } ? "vivo" : "")" href="@Vista.Ruta(T!, R, I, gi)">
+                    <div><b>Juego @(g + 1)</b></div>
+                    <div class="pt num">@(j.Sa != null ? $"{j.Sa} - {j.Sb}" : "vs")</div>
+                    <div class="pie"><span class="tag @(e == "en curso" ? "solido" : "")">@(char.ToUpper(e[0]) + e[1..])</span>
+                        @if (!string.IsNullOrEmpty(j.Date)) { <span><Icono Nombre="clock" />@Vista.FechaCorta(j.Date) @j.Time</span> }</div>
+                </a>
+            }
+        </div>
+    </div>;
+
+    // ------------------------------------------------------- detalle del marcador
+    RenderFragment Detalle(Live L) => @<div>
+        @if (L.K == "beis")
+        {
+            var n = Math.Max(5, L.R!.A.Count);
+            <table class="entradas">
+                <thead><tr><th></th>@for (var j = 0; j < n; j++) { <th>@(j + 1)</th> }</tr></thead>
+                <tbody>
+                    <tr><td>@Vista.Nombre(P!.A)</td>@for (var j = 0; j < n; j++) { <td>@(j < L.R.A.Count ? L.R.A[j].ToString() : "–")</td> }</tr>
+                    <tr><td>@Vista.Nombre(P.B)</td>@for (var j = 0; j < n; j++) { <td>@(j < L.R.B.Count ? L.R.B[j].ToString() : "–")</td> }</tr>
+                </tbody>
+            </table>
+            <p class="sub">Entrada @(L.Inn + 1), batea <b>@Vista.Nombre(L.Half == "a" ? P.A : P.B)</b> · Outs @(new string('●', L.O) + new string('○', Math.Max(0, 3 - L.O)))</p>
+        }
+        else if (L.K == "bas3")
+        {
+            <div class="reloj">@Vivo.Reloj(Vivo.Restante(L))</div>
+            <p class="sub">Faltas: @Vista.Nombre(P!.A) @L.F!.A · @Vista.Nombre(P.B) @L.F.B@((M!.Sa >= 21 || M.Sb >= 21) ? " · Un equipo llegó a 21: ya puedes finalizar." : "")</p>
+        }
+        else if (L.K == "vol")
+        {
+            @if (L.Sets!.Count > 0) { <p class="sub">@string.Join(" · ", L.Sets.Select((s, j) => $"Set {j + 1}: {s[0]}-{s[1]}"))</p> }
+            @if (L.Over) { <p class="sub">Terminó el partido. Ya puedes finalizar.</p> }
+            else { <p class="sub">Set @(L.Sets.Count + 1) en juego: <b>@L.Cur![0] - @L.Cur[1]</b> (a @((L.W!.A == Vivo.SetsParaGanar - 1 && L.W.B == Vivo.SetsParaGanar - 1) ? 15 : 25), ganando por 2)</p> }
+        }
+    </div>;
+
+    // ------------------------------------------------- iniciar o poner resultado
+    RenderFragment SinMarcador() => @<div class="cols" style="grid-template-columns:1fr 1fr;margin-top:14px">
+        <div class="card">
+            <h3>Marcador en vivo</h3>
+            <p class="hint">Inicia el marcador y todos verán los cambios al instante.</p>
+            <button class="btn pri block" style="margin-top:14px" @onclick="Iniciar"><Icono Nombre="bolt" />Iniciar partido en vivo</button>
+        </div>
+        <form class="card" @onsubmit="GuardarManual" @onsubmit:preventDefault="true">
+            <h3>Resultado manual</h3>
+            <p class="hint">Si no vas a anotar en vivo, escribe el marcador final.</p>
+            <div class="fila" style="margin-top:12px;align-items:flex-end">
+                <div style="flex:1"><label class="etq">@Vista.Nombre(P!.A)</label><input class="campo num-in" type="number" min="0" inputmode="numeric" @bind="manA" /></div>
+                <div style="flex:1"><label class="etq">@Vista.Nombre(P.B)</label><input class="campo num-in" type="number" min="0" inputmode="numeric" @bind="manB" /></div>
+            </div>
+            <div class="fila" style="margin-top:14px">
+                <button type="submit" class="btn pri" style="flex:1">Guardar resultado</button>
+                @if (M!.Sa != null) { <button type="button" class="btn" @onclick="QuitarResultado">Quitar</button> }
+            </div>
+        </form>
+    </div>;
+
+    void Iniciar()
+    {
+        Vivo.Iniciar(T!, M!);
+        Guardar();
+    }
+
+    async Task GuardarManual()
+    {
+        var t = T!; var m = M!;
+        if (manA == null || manB == null) { Avisos.Toast("Escribe los dos marcadores."); return; }
+        var a = Math.Max(0, manA.Value); var b = Math.Max(0, manB.Value);
+        if (a == b && (!Deportes.De(t.Sport).Empates || Formatos.EsLlave(t, R) || G != null)) { Avisos.Toast("No puede terminar empatado."); return; }
+        if (m.Sa != null && !await Avisos.ConfirmarAsync("Corregir resultado", $"Este partido ya tiene resultado oficial ({m.Sa} - {m.Sb}). Se recalculan tablas y llaves y el cambio queda guardado.", "Corregir")) return;
+        m.Sa = a; m.Sb = b;
+        if (G != null) Formatos.Serie(t, R, I);
+        else if ((R == "T" || Formatos.EsLlave(t, R)) && a != b) Formatos.PonerResultado(t, R, I, a > b ? m.A : m.B);
+        Guardar();
+        Avisos.Toast("Resultado guardado");
+    }
+
+    async Task QuitarResultado()
+    {
+        var t = T!; var m = M!;
+        if (!await Avisos.ConfirmarAsync("Quitar resultado", "Se borra el marcador de este partido y se recalculan tablas y llaves.", "Quitar", true)) return;
+        m.Sa = null; m.Sb = null; manA = manB = null;
+        if (G != null) Formatos.Serie(t, R, I);
+        else if (R == "T" || Formatos.EsLlave(t, R)) Formatos.PonerResultado(t, R, I, null);
+        Guardar();
+    }
+
+    // ------------------------------------------------------------- en vivo
+    void Act(string x, string k = "a", int v = 1)
+    {
+        if (!Cuentas.PuedeAnotar || M?.Live == null) return;
+        Vivo.Accion(M, x, k, v, k == "a" ? jugA : jugB);
+        Guardar();
+    }
+
+    async Task Finalizar()
+    {
+        var t = T!;
+        var r = Vivo.Finalizar(t, M!, R, I, G);
+        if (r == Vivo.ResultadoFin.PartidoSinTerminar)
+        {
+            if (!await Avisos.ConfirmarAsync("El partido aún no termina", "¿Finalizar de todas formas?", "Finalizar")) return;
+            r = Vivo.Finalizar(t, M!, R, I, G, forzar: true);
+        }
+        if (r == Vivo.ResultadoFin.Empatado) { Avisos.Toast("No puede terminar empatado. Sigue jugando o define el desempate."); return; }
+        Guardar();
+        Avisos.Toast("Partido finalizado");
+    }
+
+    async Task Reabrir()
+    {
+        if (!await Avisos.ConfirmarAsync("Reabrir partido", "Reabrir un partido finalizado cambia el resultado oficial y recalcula tablas y llaves.", "Reabrir")) return;
+        Vivo.Reabrir(T!, M!, R, I, G);
+        Guardar();
+    }
+
+    void ElegirJugador(string k, ChangeEventArgs e)
+    {
+        var v = e.Value?.ToString() ?? string.Empty;
+        if (k == "a") jugA = v; else jugB = v;
+    }
+
+    List<Jugador> Plantel(string? equipo) =>
+        equipo != null && T!.Ro.TryGetValue(equipo, out var ro) ? ro.Pl.OrderByDescending(p => p.St).ToList() : new List<Jugador>();
+
+    RenderFragment Selector(string k, string? equipo) => @<div>
+        @{
+            var sus = Clasificacion.Suspensiones(T!, M!.Live!.Ts0);
+            var actual = k == "a" ? jugA : jugB;
+        }
+        <select class="campo" aria-label="Jugador de @equipo" value="@actual" @onchange="e => ElegirJugador(k, e)">
+            <option value="">@Vista.Nombre(equipo): sin jugador</option>
+            @foreach (var p in Plantel(equipo))
+            {
+                var suspendido = sus.GetValueOrDefault(equipo + "|" + p.N) > 0;
+                <option value="@p.N">@(string.IsNullOrEmpty(p.Num) ? "" : p.Num + " ")@p.N@(p.St ? "" : " (banca)")@(suspendido ? " · suspendido" : "")</option>
+            }
+        </select>
+    </div>;
+
+    RenderFragment Botones(string k, Live L) => @<div class="ctl-botones">
+        @if (L.K == "bas3")
+        {
+            <button class="btn pri" @onclick='() => Act("pt", k, 1)'>+1</button>
+            <button class="btn pri" @onclick='() => Act("pt", k, 2)'>+2</button>
+            <button class="btn" @onclick='() => Act("pm", k)'>−1</button>
+            <button class="btn" @onclick='() => Act("foul", k)'>Falta</button>
+        }
+        else if (L.K == "vol")
+        {
+            <button class="btn pri grande" @onclick='() => Act("pt", k)'>+1 punto</button>
+            <button class="btn" @onclick='() => Act("ace", k)'>Ace</button>
+            <button class="btn" @onclick='() => Act("blk", k)'>Bloqueo</button>
+            <button class="btn" @onclick='() => Act("pm", k)'>−1</button>
+        }
+        else if (L.K == "beis")
+        {
+            <button class="btn pri grande" disabled="@(L.Half != k)" @onclick='() => Act("run", k)'>+1 carrera</button>
+            <button class="btn" disabled="@(L.Half != k)" @onclick='() => Act("unrun", k)'>−1 carrera</button>
+        }
+        else
+        {
+            <button class="btn pri" @onclick='() => Act("pt", k)'>+1</button>
+            <button class="btn" @onclick='() => Act("pm", k)'>−1</button>
+        }
+        <button class="btn" @onclick='() => Act("yc", k)'>Amarilla</button>
+        <button class="btn" @onclick='() => Act("rc", k)'>Roja</button>
+    </div>;
+
+    RenderFragment Controles(Live L) => @<div>
+        <div class="controles">
+            <div class="ctl-eq"><b>@Vista.Nombre(P!.A)</b>@Selector("a", P.A)<div style="height:10px"></div>@Botones("a", L)</div>
+            <div class="ctl-eq"><b>@Vista.Nombre(P.B)</b>@Selector("b", P.B)<div style="height:10px"></div>@Botones("b", L)</div>
+        </div>
+        <div class="card" style="margin-top:14px">
+            <div class="ctl-botones">
+                @if (L.K == "bas3") { <button class="btn pri" @onclick='() => Act("clk")'>@(L.Run ? "Pausar reloj" : "Iniciar reloj")</button> }
+                @if (L.K == "beis")
+                {
+                    <button class="btn" @onclick='() => Act("out", L.Half)'>Out</button>
+                    <button class="btn" @onclick='() => Act("half", L.Half)'>Siguiente mitad</button>
+                }
+                <button class="btn" disabled="@(!(L.H?.Count > 0))" @onclick='() => Act("undo")'>Deshacer</button>
+                <button class="btn pri" @onclick="Finalizar">Finalizar partido</button>
+            </div>
+        </div>
+    </div>;
+
+    // ------------------------------------------------- programación y línea de tiempo
+    RenderFragment Programacion() => @<div class="card" style="margin-top:14px">
+        <h3>Programación</h3>
+        <div class="fila" style="margin-top:6px">
+            <div style="flex:1;min-width:140px"><label class="etq" for="p_fecha">Fecha</label><input id="p_fecha" class="campo" type="date" value="@M!.Date" @onchange="e => { M!.Date = string.IsNullOrEmpty(e.Value?.ToString()) ? null : e.Value!.ToString(); Guardar(); }" /></div>
+            <div style="flex:1;min-width:120px"><label class="etq" for="p_hora">Hora</label><input id="p_hora" class="campo" type="time" value="@M.Time" @onchange="e => { M!.Time = string.IsNullOrEmpty(e.Value?.ToString()) ? null : e.Value!.ToString(); Guardar(); }" /></div>
+            <div style="flex:1;min-width:140px"><label class="etq" for="p_cancha">Cancha</label><input id="p_cancha" class="campo" maxlength="30" value="@M.Court" @onchange="e => { M!.Court = string.IsNullOrWhiteSpace(e.Value?.ToString()) ? null : e.Value!.ToString()!.Trim(); Guardar(); }" /></div>
+        </div>
+        <div class="fila" style="margin-top:14px">
+            <label class="etq" style="margin:0" for="p_est">Estado</label>
+            <select id="p_est" class="campo" style="max-width:220px" value="@(M.Est ?? "")" @onchange="CambiarEstado">
+                <option value="">Programado</option><option value="aplazado">Aplazado</option><option value="cancelado">Cancelado</option>
+            </select>
+        </div>
+    </div>;
+
+    void CambiarEstado(ChangeEventArgs e)
+    {
+        var v = e.Value?.ToString() ?? "";
+        var m = M!;
+        if (v == "aplazado") { m.Date = null; m.Time = null; m.Court = null; }
+        m.Est = v == "" ? null : v;
+        Guardar();
+    }
+
+    static string NombreEvento(string x) => x switch
+    {
+        "run" => "Carrera", "pt" => "Punto", "ace" => "Ace", "blk" => "Bloqueo", "foul" => "Falta",
+        "yc" => "Tarjeta amarilla", "rc" => "Tarjeta roja", _ => x
+    };
+
+    RenderFragment Linea(List<Evento> ev) => @<div>
+        <h2>Línea de tiempo</h2>
+        <div class="card">
+            @foreach (var e in Enumerable.Reverse(ev))
+            {
+                <div class="linea">
+                    <span class="hora">@e.Lab</span>
+                    <span class="ev"><b>@NombreEvento(e.X)@(e.X == "pt" && e.V > 1 ? " +" + e.V : "")</b>@if (!string.IsNullOrEmpty(e.P)) { <text>: @e.P</text> }<br /><small>@Vista.Nombre(e.K == "a" ? P!.A : P!.B)</small></span>
+                </div>
+            }
+        </div>
+    </div>;
+}

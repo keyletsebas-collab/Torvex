@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Torvex.Core")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+754766a7df4a66a19ef161823d5378b106687551")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9d8f8f02a69b0aadea3bcb8faff4b485d76b36f4")]
 [assembly: System.Reflection.AssemblyProductAttribute("Torvex.Core")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Torvex.Core")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -1,0 +1,29 @@
+@page "/vivo"
+@implements IDisposable
+@inject AlmacenTorneos Torneos
+
+<EncabezadoPagina Titulo="En vivo" Subtitulo="Partidos que se están jugando ahora mismo." />
+
+<div class="page">
+    @if (EnVivo.Count == 0)
+    {
+        <div class="card vacio">
+            <div class="vacio-ic"><Icono Nombre="bolt" /></div>
+            <b>No hay partidos en vivo</b>
+            Cuando un anotador inicie un marcador, aparecerá aquí y se actualizará solo.
+        </div>
+    }
+    else
+    {
+        <div class="grid-partidos">
+            @foreach (var x in EnVivo) { <FilaPartido T="x.Torneo" R="@x.Clave" I="x.I" M="x.Partido" MostrarTorneo="true" /> }
+        </div>
+    }
+</div>
+
+@code {
+    List<Vivo.EnJuego> EnVivo => Vivo.EnCurso(Torneos.Lista.Where(t => !t.Arch));
+    protected override void OnInitialized() => Torneos.Cambio += Refrescar;
+    void Refrescar() => InvokeAsync(StateHasChanged);
+    public void Dispose() => Torneos.Cambio -= Refrescar;
+}

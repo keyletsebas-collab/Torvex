@@ -1,0 +1,45 @@
+{
+  "Files": [
+    {
+      "Id": "C:\\Users\\keyle\\.nuget\\packages\\microsoft.aspnetcore.components.webview\\10.0.0\\staticwebassets\\blazor.modules.json",
+      "PackagePath": "staticwebassets\\_framework\\blazor.modules.json"
+    },
+    {
+      "Id": "C:\\Users\\keyle\\.nuget\\packages\\microsoft.aspnetcore.components.webview\\10.0.0\\staticwebassets\\blazor.webview.js",
+      "PackagePath": "staticwebassets\\_framework\\blazor.webview.js"
+    },
+    {
+      "Id": "c:\\Users\\keyle\\Downloads\\torneos-escolares\\Torvex\\src\\Torvex.App\\wwwroot\\app.css",
+      "PackagePath": "staticwebassets\\app.css"
+    },
+    {
+      "Id": "c:\\Users\\keyle\\Downloads\\torneos-escolares\\Torvex\\src\\Torvex.App\\wwwroot\\index.html",
+      "PackagePath": "staticwebassets\\index.html"
+    },
+    {
+      "Id": "c:\\Users\\keyle\\Downloads\\torneos-escolares\\Torvex\\src\\Torvex.App\\wwwroot\\torvex.js",
+      "PackagePath": "staticwebassets\\torvex.js"
+    },
+    {
+      "Id": "obj\\Debug\\net10.0-windows10.0.19041.0\\win-x64\\staticwebassets\\msbuild.Torvex.App.Microsoft.AspNetCore.StaticWebAssetEndpoints.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssetEndpoints.props"
+    },
+    {
+      "Id": "obj\\Debug\\net10.0-windows10.0.19041.0\\win-x64\\staticwebassets\\msbuild.Torvex.App.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj\\Debug\\net10.0-windows10.0.19041.0\\win-x64\\staticwebassets\\msbuild.build.Torvex.App.props",
+      "PackagePath": "build\\Torvex.App.props"
+    },
+    {
+      "Id": "obj\\Debug\\net10.0-windows10.0.19041.0\\win-x64\\staticwebassets\\msbuild.buildMultiTargeting.Torvex.App.props",
+      "PackagePath": "buildMultiTargeting\\Torvex.App.props"
+    },
+    {
+      "Id": "obj\\Debug\\net10.0-windows10.0.19041.0\\win-x64\\staticwebassets\\msbuild.buildTransitive.Torvex.App.props",
+      "PackagePath": "buildTransitive\\Torvex.App.props"
+    }
+  ],
+  "ElementsToRemove": []
+}

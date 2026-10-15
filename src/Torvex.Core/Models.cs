@@ -43,7 +43,7 @@ public sealed class Jugador
 public sealed class Plantilla
 {
     [JsonPropertyName("coach")] public string Coach { get; set; } = "";
-    [JsonPropertyName("pl")] public List<Jugador> Pl { get; set; } = new();
+    [JsonPropertyName("pl")] public List<Jugador> Pl { get; set; } = [];
 }
 
 /// <summary>Evento anotado en vivo (carrera, punto, falta, tarjeta...).</summary>
@@ -113,16 +113,16 @@ public sealed class Partido
 public sealed class Grupo
 {
     [JsonPropertyName("n")] public string N { get; set; } = "";
-    [JsonPropertyName("teams")] public List<string> Teams { get; set; } = new();
-    [JsonPropertyName("matches")] public List<Partido> Matches { get; set; } = new();
+    [JsonPropertyName("teams")] public List<string> Teams { get; set; } = [];
+    [JsonPropertyName("matches")] public List<Partido> Matches { get; set; } = [];
 }
 
 /// <summary>Cuadros de la doble eliminación: ganadores (W), perdedores (L) y gran final (F).</summary>
 public sealed class DobleElim
 {
-    [JsonPropertyName("W")] public List<List<Partido>> W { get; set; } = new();
-    [JsonPropertyName("L")] public List<List<Partido>> L { get; set; } = new();
-    [JsonPropertyName("F")] public List<Partido> F { get; set; } = new() { new Partido() };
+    [JsonPropertyName("W")] public List<List<Partido>> W { get; set; } = [];
+    [JsonPropertyName("L")] public List<List<Partido>> L { get; set; } = [];
+    [JsonPropertyName("F")] public List<Partido> F { get; set; } = [new Partido()];
 }
 
 /// <summary>Una edición de torneo.</summary>
@@ -133,11 +133,11 @@ public sealed class Torneo
     [JsonPropertyName("sport")] public string Sport { get; set; } = "beis";
     [JsonPropertyName("rama")] public string? Rama { get; set; }
     [JsonPropertyName("type")] public string Type { get; set; } = "elim";   // liga | elim | grupos | dele
-    [JsonPropertyName("teams")] public List<string> Teams { get; set; } = new();
-    [JsonPropertyName("rounds")] public List<List<Partido>> Rounds { get; set; } = new();
-    [JsonPropertyName("matches")] public List<Partido> Matches { get; set; } = new();
-    [JsonPropertyName("gr")] public List<Grupo> Gr { get; set; } = new();
-    [JsonPropertyName("ro")] public Dictionary<string, Plantilla> Ro { get; set; } = new();
+    [JsonPropertyName("teams")] public List<string> Teams { get; set; } = [];
+    [JsonPropertyName("rounds")] public List<List<Partido>> Rounds { get; set; } = [];
+    [JsonPropertyName("matches")] public List<Partido> Matches { get; set; } = [];
+    [JsonPropertyName("gr")] public List<Grupo> Gr { get; set; } = [];
+    [JsonPropertyName("ro")] public Dictionary<string, Plantilla> Ro { get; set; } = [];
     [JsonPropertyName("tp")] public Partido? Tp { get; set; }
     [JsonPropertyName("de")] public DobleElim? De { get; set; }
     [JsonPropertyName("dbl")] public bool Dbl { get; set; }

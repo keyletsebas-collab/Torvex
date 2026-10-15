@@ -1,0 +1,125 @@
+@page "/"
+@implements IDisposable
+@inject Cuentas Cuentas
+@inject AlmacenTorneos Torneos
+
+<EncabezadoPagina Titulo="Inicio" Subtitulo="Resultados, calendarios y clasificaciones." />
+
+<div class="page">
+    <section class="banner">
+        <h2>Hola, @Primero 👋</h2>
+        <p>
+            @if (Activos.Count > 0 || Proximos.Count > 0)
+            {
+                <text>Hay @Activos.Count @(Activos.Count == 1 ? "torneo activo" : "torneos activos") y @Proximos.Count @(Proximos.Count == 1 ? "partido próximo" : "partidos próximos") en @Cuentas.ColegioNombre.</text>
+            }
+            else
+            {
+                <text>Bienvenido a @Cuentas.ColegioNombre. Aquí verás los resultados de Baseball5, Basket 3x3 y Voleibol.</text>
+            }
+        </p>
+    </section>
+
+    <div class="kpis">
+        <div class="kpi"><span>Torneos</span><b class="num">@Torneos.Lista.Count</b><small>En todas las ramas</small></div>
+        <div class="kpi"><span>En juego</span><b class="num">@Activos.Count</b><small>Ediciones activas</small></div>
+        <div class="kpi"><span>Equipos</span><b class="num">@Equipos</b><small>Inscritos</small></div>
+        <div class="kpi"><span>En vivo</span><b class="num">@EnVivo.Count</b><small>@(EnVivo.Count == 1 ? "Partido ahora" : "Partidos ahora")</small></div>
+    </div>
+
+    <div class="cols" style="margin-top:8px">
+        <div>
+            @if (EnVivo.Count > 0)
+            {
+                <h2>Ahora en vivo</h2>
+                <div class="lista">
+                    @foreach (var x in EnVivo) { <FilaPartido T="x.Torneo" R="@x.Clave" I="x.I" M="x.Partido" MostrarTorneo="true" /> }
+                </div>
+            }
+
+            <h2>Próximos partidos</h2>
+            @if (Proximos.Count == 0)
+            {
+                <div class="card vacio"><div class="vacio-ic"><Icono Nombre="calendar" /></div><b>Sin partidos programados</b>Cuando el organizador ponga fecha a los partidos aparecerán aquí.</div>
+            }
+            else
+            {
+                <div class="lista">
+                    @foreach (var x in Proximos.Take(6)) { <FilaPartido T="x.T" R="@x.R" I="x.I" M="x.M" MostrarTorneo="true" /> }
+                </div>
+            }
+
+            <h2>Resultados recientes</h2>
+            @if (Recientes.Count == 0)
+            {
+                <div class="card vacio"><div class="vacio-ic"><Icono Nombre="check" /></div><b>Todavía no hay resultados</b>Los marcadores oficiales aparecerán aquí.</div>
+            }
+            else
+            {
+                <div class="lista">
+                    @foreach (var x in Recientes.Take(5)) { <FilaPartido T="x.T" R="@x.R" I="x.I" M="x.M" MostrarTorneo="true" /> }
+                </div>
+            }
+        </div>
+
+        <div>
+            <h2>Deportes</h2>
+            <div class="lista">
+                @foreach (var d in Deportes.Principales)
+                {
+                    <a class="card fila" href="torneos?deporte=@d.Clave" style="color:inherit">
+                        <span class="escudo g">@d.Icono</span>
+                        <span style="flex:1"><b>@d.Nombre</b><br /><span class="hint">@Torneos.Lista.Count(t => t.Sport == d.Clave && !t.Arch) @(Torneos.Lista.Count(t => t.Sport == d.Clave && !t.Arch) == 1 ? "edición" : "ediciones")</span></span>
+                        <span style="width:20px;color:var(--faint)"><Icono Nombre="arrow" /></span>
+                    </a>
+                }
+            </div>
+
+            <h2>Torneos activos</h2>
+            @if (Activos.Count == 0)
+            {
+                <div class="card vacio"><div class="vacio-ic"><Icono Nombre="trophy" /></div><b>Nada en juego</b>@(Cuentas.EsOrganizador ? "Crea una edición desde Torneos." : "Aún no hay torneos en curso.")</div>
+            }
+            else
+            {
+                <div class="lista">
+                    @foreach (var t in Activos.Take(5))
+                    {
+                        <a class="card fila" href="torneo/@t.Id" style="color:inherit">
+                            <span class="escudo g">@Deportes.De(t.Sport).Icono</span>
+                            <span style="flex:1;min-width:0"><b>@(string.IsNullOrEmpty(t.Name) ? "Edición" : t.Name)</b><br /><span class="hint">@Vista.Etiqueta(t)</span><br /><span class="hint">@Vista.Avance(t)</span></span>
+                        </a>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    string Primero => (Cuentas.Perfil?.Nombre ?? "").Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "";
+    List<Torneo> Activos => Torneos.Lista.Where(t => !t.Arch && Formatos.Generado(t) && Clasificacion.Campeon(t) == "").ToList();
+    int Equipos => Torneos.Lista.Where(t => !t.Arch).Sum(t => t.Teams.Count);
+    List<Vivo.EnJuego> EnVivo => Vivo.EnCurso(Torneos.Lista.Where(t => !t.Arch));
+
+    List<(Torneo T, string R, int I, Partido M)> Proximos
+    {
+        get
+        {
+            var hoy = DateTime.Today.ToString("yyyy-MM-dd");
+            return Torneos.Lista.Where(t => !t.Arch)
+                .SelectMany(t => Vista.Jugables(t).Where(x => x.M.W == null && x.M.Live == null && !string.IsNullOrEmpty(x.M.Date) && string.CompareOrdinal(x.M.Date, hoy) >= 0 && x.M.Est is null or "programado" && !(x.M.Bo > 1))
+                    .Select(x => (T: t, x.R, x.I, x.M)))
+                .OrderBy(x => x.M.Date + (x.M.Time ?? "99")).ToList();
+        }
+    }
+
+    List<(Torneo T, string R, int I, Partido M)> Recientes =>
+        Torneos.Lista.Where(t => !t.Arch)
+            .SelectMany(t => Vista.Jugables(t).Where(x => x.M.Sa != null && x.M.Sb != null && Clasificacion.Estado(t, x.M) == "finalizado").Select(x => (T: t, x.R, x.I, x.M)))
+            .OrderByDescending(x => x.M.Live?.Ts0 ?? 0).ThenByDescending(x => x.T.Id).ToList();
+
+    protected override void OnInitialized() => Torneos.Cambio += Refrescar;
+    void Refrescar() => InvokeAsync(StateHasChanged);
+    public void Dispose() => Torneos.Cambio -= Refrescar;
+}

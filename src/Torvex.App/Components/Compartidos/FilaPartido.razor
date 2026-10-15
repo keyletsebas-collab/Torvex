@@ -1,0 +1,41 @@
+@* Tarjeta de un partido: equipos, marcador, estado y programación. Al tocarla se abre el partido. *@
+@{
+    var est = Clasificacion.Estado(T, M);
+    var hayMarcador = M.Sa != null && M.Sb != null && est != "programado";
+    var ganaA = hayMarcador && M.Sa > M.Sb; var ganaB = hayMarcador && M.Sb > M.Sa;
+    var vivo = est == "en curso";
+}
+<a class="partido @(vivo ? "vivo" : "")" href="@Vista.Ruta(T, R, I)">
+    <div>
+        <div class="eq @(ganaA ? "gana" : ganaB ? "pierde" : "")"><Escudo Nombre="@M.A" /><span>@Vista.Nombre(M.A)</span></div>
+        <div class="eq @(ganaB ? "gana" : ganaA ? "pierde" : "")"><Escudo Nombre="@M.B" /><span>@Vista.Nombre(M.B)</span></div>
+    </div>
+    <div>
+        @if (hayMarcador)
+        {
+            <div class="pt num">@M.Sa</div>
+            <div class="pt num">@M.Sb</div>
+        }
+        else
+        {
+            <div class="pt" style="color:var(--faint)">vs</div>
+        }
+    </div>
+    <div class="pie">
+        @if (vivo) { <span class="tag solido"><i class="punto-vivo"></i>En vivo</span> }
+        else if (est == "finalizado") { <span class="tag acento">Finalizado</span> }
+        else { <span class="tag">@(char.ToUpper(est[0]) + est[1..])</span> }
+        @if (M.Bo > 1) { <span class="tag">Mejor de @M.Bo</span> }
+        @if (MostrarTorneo) { <span>@Deportes.De(T.Sport).Icono @(string.IsNullOrEmpty(T.Name) ? "Edición" : T.Name)</span> }
+        @if (!string.IsNullOrEmpty(M.Date)) { <span><Icono Nombre="clock" />@Vista.FechaCorta(M.Date)@(string.IsNullOrEmpty(M.Time) ? "" : " " + M.Time)</span> }
+        @if (!string.IsNullOrEmpty(M.Court)) { <span><Icono Nombre="pin" />@M.Court</span> }
+    </div>
+</a>
+
+@code {
+    [Parameter, EditorRequired] public Torneo T { get; set; } = default!;
+    [Parameter, EditorRequired] public string R { get; set; } = "";
+    [Parameter, EditorRequired] public int I { get; set; }
+    [Parameter, EditorRequired] public Partido M { get; set; } = default!;
+    [Parameter] public bool MostrarTorneo { get; set; }
+}
