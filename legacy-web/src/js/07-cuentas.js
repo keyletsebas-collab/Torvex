@@ -23,31 +23,103 @@ function clearWait(){if(WAITT){clearInterval(WAITT);WAITT=null}}
 function gateShow(on){document.body.classList.toggle("gating",!!on);var g=$("gate");if(g)g.hidden=!on}
 
 /* ---------- pantalla de acceso ---------- */
-function gField(id,label,type,val,extra){return'<label for="'+id+'">'+label+'</label><input class="gin" id="'+id+'" data-gf="'+id.slice(2)+'" type="'+type+'" value="'+esc(val||"")+'" '+(extra||"")+'>'}
+var GREM=false,GDIR="",GFOCUS="",PWL=["","Muy corta (mínimo 6)","Aceptable","Buena","Fuerte"];
+try{var gse=localStorage.getItem("torneo-email");if(gse){GF.email=gse;GREM=true}}catch(e){}
+var EYE='<svg class="eye-o" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="eye-c" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.9 10.9 0 0 1 12 19C5 19 1 12 1 12a18.5 18.5 0 0 1 5.06-5.94M9.9 4.24A9.1 9.1 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M1 1l22 22"/></svg>';
+function gField(id,label,type,val,extra){
+  var inp='<input class="gin" id="'+id+'" data-gf="'+id.slice(2)+'" type="'+type+'" value="'+esc(val||"")+'" '+(extra||"")+'>';
+  if(type==="password")inp='<div class="gpw">'+inp+'<button type="button" class="geye" data-ac="ver" data-for="'+id+'" aria-label="Mostrar contraseña" title="Mostrar u ocultar">'+EYE+'</button></div><small class="gcaps" hidden>⇪ Bloq Mayús está activado</small>';
+  return'<label for="'+id+'">'+label+'</label>'+inp;
+}
+function pwScore(p){p=p||"";if(!p)return 0;if(p.length<6)return 1;var c=[/[a-z]/,/[A-Z]/,/\d/,/[^A-Za-z0-9]/].filter(function(r){return r.test(p)}).length,s=2;if(p.length>=9&&c>=2)s=3;if(p.length>=11&&c>=3)s=4;return s}
+function gMeter(){var s=pwScore(GF.pass);return'<div class="gpinfo"><div class="gmeter" id="gmeter" data-s="'+s+'"><i></i><i></i><i></i><i></i></div><small class="gmeterl" id="gmeterl">'+(PWL[s]||"&nbsp;")+'</small><small class="gmatch" id="gmatch">&nbsp;</small></div>'}
+function pwUpdate(){
+  var m=$("gmeter");if(m){var s=pwScore(GF.pass);m.dataset.s=s;var l=$("gmeterl");if(l)l.textContent=PWL[s]||"\u00a0"}
+  var q=$("gmatch");if(q){
+    if(!GF.pass2){q.textContent="\u00a0";q.className="gmatch"}
+    else if(GF.pass===GF.pass2){q.textContent="✓ Coinciden";q.className="gmatch ok"}
+    else{q.textContent="No coinciden";q.className="gmatch no"}
+  }
+}
 function gCard(inner){return'<div class="gbox"><div class="gbrand"><span class="glogo">🏆</span><div><b>Torneos escolares</b><small>Liga deportiva escolar</small></div></div>'+inner+'</div>'}
+/* ---------- colegio animado: aparece sin nombre y se va editando con lo que se escribe o elige ---------- */
+var SCHSEEN=false,SCHLAST="";
+function schName(){return GNEW?(GF.cnom||"").trim():(GCOL?GCOLN:"")}
+function schHue(n){if(!n)return 215;var h=0;for(var i=0;i<n.length;i++)h=(h*31+n.charCodeAt(i))%360;return h}
+function schLit(n){return n?Math.min(8,1+Math.floor(n.length/2)):0}
+function schLetters(n,mode){
+  if(!n)return"Colegio sin nombre";
+  var a=Array.from(n);
+  return a.map(function(c,i){
+    var cls=mode==="all"?"st":(mode==="last"&&i===a.length-1?"pop":"");
+    return'<span'+(cls?' class="'+cls+'"':"")+(mode==="all"?' style="--d:'+Math.min(i*32,700)+'ms"':"")+'>'+esc(c)+'</span>';
+  }).join("");
+}
+function schPaint(n){
+  var w=$("gsch");if(!w)return;
+  w.style.setProperty("--sh",schHue(n));
+  var lit=schLit(n);
+  w.querySelectorAll(".gs-win").forEach(function(e,i){e.classList.toggle("on",i<lit)});
+  var ini=$("gschi");if(ini)ini.textContent=n?n.trim().charAt(0).toUpperCase():"?";
+}
+function schUpdate(){
+  var n=schName(),el=$("gschn");if(!el)return;
+  var prev=SCHLAST;SCHLAST=n;
+  el.className="gsch-sign"+(n?"":" empty")+(n.length>22?" long":"")+(GNEW?" edit":"");
+  el.innerHTML=schLetters(n,n.length>prev.length?"last":"none");
+  schPaint(n);
+}
+function gSchool(first){
+  var n=schName(),ch=n!==SCHLAST,lit=schLit(n);SCHLAST=n;
+  var W=[[60,76],[86,76],[154,76],[180,76],[60,106],[86,106],[154,106],[180,106]].map(function(p,i){
+    return'<rect class="gs-win'+(!first&&i<lit?" on":"")+'" style="--i:'+i+'" x="'+p[0]+'" y="'+p[1]+'" width="14" height="18" rx="2"/>';
+  }).join("");
+  return'<div class="gsch'+(first?" enter":"")+'" id="gsch" style="--sh:'+schHue(n)+'">'+
+    '<svg class="gsch-svg" viewBox="0 0 240 150" aria-hidden="true">'+
+    '<ellipse class="gs-cl c1" cx="38" cy="26" rx="18" ry="6"/><ellipse class="gs-cl c2" cx="196" cy="20" rx="22" ry="7"/><circle class="gs-star s1" cx="20" cy="60" r="1.4"/><circle class="gs-star s2" cx="220" cy="54" r="1.2"/><circle class="gs-star s3" cx="160" cy="14" r="1.1"/>'+
+    '<rect class="gs-ground" x="0" y="134" width="240" height="16"/>'+
+    '<g class="gs-bld"><rect class="gs-wall" x="48" y="64" width="144" height="70" rx="3"/>'+
+    '<path class="gs-roof" d="M38 64 L120 26 L202 64 Z"/>'+
+    '<g class="gs-flag"><line x1="120" y1="26" x2="120" y2="6"/><path class="gs-fl" d="M120 6 L144 12 L120 19 Z"/></g>'+
+    '<circle class="gs-crest" cx="120" cy="50" r="11"/><text class="gs-init" id="gschi" x="120" y="55" text-anchor="middle">'+esc(n?n.trim().charAt(0).toUpperCase():"?")+'</text>'+
+    W+'<rect class="gs-door" x="106" y="102" width="28" height="32" rx="3"/><rect class="gs-step" x="100" y="131" width="40" height="4" rx="1"/></g></svg>'+
+    '<div class="gsch-sign'+(n?"":" empty")+(n.length>22?" long":"")+(GNEW?" edit":"")+'" id="gschn" aria-live="polite">'+schLetters(n,first||ch?"all":"none")+'</div></div>';
+}
 function gColegio(){
+  var first=!SCHSEEN;SCHSEEN=true;
   var sel=GNEW?"➕ Crear un colegio nuevo":(GCOL?esc(GCOLN):"Elige tu colegio");
-  var h='<label>Colegio</label><div class="gdd'+(GOPEN?" open":"")+'"><button type="button" class="gddb" data-ac="col_abrir" aria-expanded="'+(GOPEN?"true":"false")+'"><span>'+sel+'</span><i>▾</i></button><div class="gddl" role="listbox">';
+  var h='<div class="gcol'+(first?" enter":"")+'">'+gSchool(first)+'<label>Colegio</label><div class="gdd'+(GOPEN?" open":"")+'"><button type="button" class="gddb" data-ac="col_abrir" aria-expanded="'+(GOPEN?"true":"false")+'"><span>'+sel+'</span><i>▾</i></button><div class="gddl" role="listbox">';
   h+=COLEGIOS.length?COLEGIOS.map(function(c){return'<button type="button" role="option" data-ac="col_pick" data-id="'+esc(c.id)+'" data-n="'+esc(c.nombre)+'" class="'+(c.id===GCOL&&!GNEW?"on":"")+'">'+esc(c.nombre)+'</button>'}).join(""):'<p class="gempty">Todavía no hay colegios registrados.</p>';
   h+='<button type="button" class="gnew" data-ac="col_nuevo">➕ Mi colegio no está: crear uno nuevo</button></div></div>';
   if(GNEW)h+=gField("g_cnom","Nombre del colegio","text",GF.cnom,'maxlength="60" autocomplete="off"')+gField("g_cclave","Contraseña del colegio (mínimo 6)","password",GF.cclave,'autocomplete="new-password"')+'<p class="gs">Con esta contraseña otros organizadores podrán unirse a tu colegio. Los estudiantes usan el código que verás en Ajustes.</p>';
   else if(GCOL)h+=gField("g_cclave","Contraseña del colegio","password",GF.cclave,'autocomplete="off"')+'<p class="gs">La puso quien creó el colegio.</p>';
-  return h;
+  return h+'</div>';
 }
 function gForm(){
   var comp=AUTH==="completar",lg=GMODE==="login"&&!comp,h="";
-  if(comp)h+='<h2 class="gh">Termina tu registro</h2><p class="gs">Tu cuenta ya existe ('+esc(MYMAIL)+'). Falta elegir tu colegio.</p>';
-  else h+='<div class="gtabs"><button type="button" data-ac="modo" data-m="login" class="'+(lg?"on":"")+'">Iniciar sesión</button><button type="button" data-ac="modo" data-m="crear" class="'+(lg?"":"on")+'">Crear cuenta</button></div>';
-  var err=GERR?'<p class="gerr" role="alert">'+esc(GERR)+'</p>':"",dis=GBUSY?" disabled":"";
+  if(comp)h+='<h2 class="gh">Termina tu registro</h2><p class="gs gsub">Tu cuenta ya existe ('+esc(MYMAIL)+'). Falta elegir tu colegio.</p>';
+  else h+='<div class="gtabs" data-m="'+(lg?"login":"crear")+'"><button type="button" data-ac="modo" data-m="login" class="'+(lg?"on":"")+'">Iniciar sesión</button><button type="button" data-ac="modo" data-m="crear" class="'+(lg?"":"on")+'">Crear cuenta</button></div>';
+  var err=GERR?'<p class="gerr" role="alert">'+esc(GERR)+'</p>':"",dis=GBUSY?" disabled":"",dir=GDIR,cls="gbody"+(dir?" sl-"+dir:"");
+  GDIR="";
   if(lg){
-    return gCard(h+gField("g_email","Correo electrónico","email",GF.email,'autocomplete="email" placeholder="tu@correo.com"')+gField("g_pass","Contraseña","password",GF.pass,'autocomplete="current-password"')+err+'<button type="button" class="gpri" data-ac="entrar"'+dis+'>'+(GBUSY?"Entrando…":"Entrar")+'</button><p class="gs">¿No tienes cuenta? Pulsa «Crear cuenta».</p>');
+    return gCard(h+'<div class="'+cls+'"><h2 class="gh">Bienvenido de nuevo</h2><p class="gs gsub">Entra con tu correo y tu contraseña.</p>'+
+      gField("g_email","Correo electrónico","email",GF.email,'autocomplete="email" placeholder="tu@correo.com"')+
+      gField("g_pass","Contraseña","password",GF.pass,'autocomplete="current-password"')+
+      '<label class="grem"><input type="checkbox" data-ac="rem"'+(GREM?" checked":"")+'><span>Recordar mi correo en este equipo</span></label>'+err+
+      '<button type="button" class="gpri" data-ac="entrar"'+dis+'>'+(GBUSY?"Entrando…":"Entrar")+'</button>'+
+      '<button type="button" class="glink" data-ac="modo" data-m="crear">¿No tienes cuenta? Crear una</button></div>');
   }
-  if(!comp)h+=gField("g_nombre","Nombre","text",GF.nombre,'maxlength="40" autocomplete="name" placeholder="Tu nombre"')+gField("g_email","Correo electrónico","email",GF.email,'autocomplete="email" placeholder="tu@correo.com"')+gField("g_pass","Contraseña (mínimo 6)","password",GF.pass,'autocomplete="new-password"')+gField("g_pass2","Repite la contraseña","password",GF.pass2,'autocomplete="new-password"');
-  h+='<button type="button" class="gorg'+(GORG?" on":"")+'" data-ac="org" aria-pressed="'+(GORG?"true":"false")+'"><span class="gsw"><i></i></span><span class="got"><b>Organizador</b><small>'+(GORG?"Elige tu colegio o crea uno nuevo":"Si no lo marcas, necesitas el código de tu colegio")+'</small></span></button>';
-  h+=GORG?gColegio():gField("g_codigo","Código del colegio","text",GF.codigo,'maxlength="30" autocapitalize="characters" autocomplete="off" placeholder="Ej. SANJ-3F9A27C1"')+'<p class="gs">Te lo da el organizador de tu colegio.</p>';
-  h+=err+'<button type="button" class="gpri" data-ac="'+(comp?"completar":"crear")+'"'+dis+'>'+(GBUSY?"Un momento…":(comp?"Continuar":"Crear cuenta"))+'</button>';
-  if(comp)h+='<button type="button" class="glink" data-ac="salir">Cerrar sesión</button>';
-  return gCard(h);
+  var b='<div class="'+cls+'">';
+  if(!comp)b+='<h2 class="gh">Crea tu cuenta</h2><p class="gs gsub">Solo toma un minuto.</p><div class="gsec"><span>1</span>Tus datos</div>'+
+    gField("g_nombre","Nombre","text",GF.nombre,'maxlength="40" autocomplete="name" placeholder="Tu nombre"')+
+    gField("g_email","Correo electrónico","email",GF.email,'autocomplete="email" placeholder="tu@correo.com"')+
+    '<div class="g2"><div>'+gField("g_pass","Contraseña","password",GF.pass,'autocomplete="new-password" placeholder="Mínimo 6"')+'</div><div>'+gField("g_pass2","Repítela","password",GF.pass2,'autocomplete="new-password"')+'</div></div>'+gMeter()+
+    '<div class="gsec"><span>2</span>Tu colegio</div>';
+  b+='<button type="button" class="gorg'+(GORG?" on":"")+'" data-ac="org" aria-pressed="'+(GORG?"true":"false")+'"><span class="gsw"><i></i></span><span class="got"><b>Organizador</b><small>'+(GORG?"Elige tu colegio o crea uno nuevo":"Si no lo marcas, necesitas el código de tu colegio")+'</small></span></button>';
+  b+=GORG?gColegio():gField("g_codigo","Código del colegio","text",GF.codigo,'maxlength="30" autocapitalize="characters" autocomplete="off" placeholder="Ej. SANJ-3F9A27C1"')+'<p class="gs">Te lo da el organizador de tu colegio.</p>';
+  b+=err+'<button type="button" class="gpri" data-ac="'+(comp?"completar":"crear")+'"'+dis+'>'+(GBUSY?"Un momento…":(comp?"Continuar":"Crear cuenta"))+'</button>';
+  if(comp)b+='<button type="button" class="glink" data-ac="salir">Cerrar sesión</button>';
+  return gCard(h+b+'</div>');
 }
 function gWait(){return'<div class="gwait"><div class="gpulse"><i></i></div><h2>Esperando aprobación</h2><p>El organizador de <b>'+esc(colegioNombre())+'</b> debe darte permiso para entrar. Esta pantalla se actualiza sola.</p><button type="button" class="glink" data-ac="salir">Cerrar sesión</button></div>'}
 function gateRender(){
@@ -59,6 +131,10 @@ function gateRender(){
   else h=gForm();
   g.className=AUTH==="pendiente"?"gate wait":"gate";
   g.innerHTML=h;
+  setTimeout(function(){
+    schPaint(schName());pwUpdate();
+    if(GFOCUS){var f=$(GFOCUS);if(f){try{f.focus()}catch(e){}}GFOCUS=""}
+  },150);
 }
 
 /* ---------- inicio, registro y sesión ---------- */
@@ -69,8 +145,8 @@ async function authInit(){
     SB=window.supabase.createClient(SB_URL,SB_KEY);
     await cargarColegios();
     var r=await SB.auth.getSession(),s=r&&r.data&&r.data.session;
-    if(s)await resolverSesion(s);else{AUTH="fuera";render()}
-  }catch(e){GERR=gerr(e);AUTH="fuera";render()}
+    if(s)await resolverSesion(s);else{AUTH="fuera";GFOCUS="g_email";render()}
+  }catch(e){GERR=gerr(e);AUTH="fuera";GFOCUS="g_email";render()}
 }
 async function resolverSesion(s){
   clearWait();
@@ -153,6 +229,7 @@ async function iniciarSesion(){
   try{
     var r=await SB.auth.signInWithPassword({email:email,password:GF.pass});
     if(r.error)throw r.error;
+    try{if(GREM)localStorage.setItem("torneo-email",email);else localStorage.removeItem("torneo-email")}catch(e2){}
     GF.pass="";await resolverSesion(r.data.session);
   }catch(e){GERR=gerr(e)}
   GBUSY=false;if(AUTH!=="ok")gateRender();
@@ -308,11 +385,12 @@ document.addEventListener("click",async function(e){
   if(!b||b.disabled||!b.dataset||!b.dataset.ac)return;
   var a=b.dataset.ac,d=b.dataset,p;
   try{
-    if(a==="modo"){GMODE=d.m;GERR="";gateRender()}
-    else if(a==="org"){GORG=!GORG;GOPEN=false;GERR="";gateRender()}
+    if(a==="modo"){if(d.m!==GMODE)GDIR=d.m==="crear"?"r":"l";GMODE=d.m;GERR="";SCHSEEN=false;SCHLAST="";GFOCUS=d.m==="crear"?"g_nombre":"g_email";gateRender()}
+    else if(a==="ver"){var iv=$(d["for"]);if(iv){var sh=iv.type==="password";iv.type=sh?"text":"password";b.classList.toggle("on",sh);b.setAttribute("aria-label",sh?"Ocultar contraseña":"Mostrar contraseña")}}
+    else if(a==="org"){GORG=!GORG;GOPEN=false;GERR="";SCHSEEN=false;SCHLAST="";gateRender()}
     else if(a==="col_abrir"){GOPEN=!GOPEN;gateRender()}
     else if(a==="col_pick"){GCOL=d.id;GCOLN=d.n;GNEW=false;GOPEN=false;GERR="";gateRender()}
-    else if(a==="col_nuevo"){GNEW=true;GCOL="";GCOLN="";GOPEN=false;GERR="";gateRender()}
+    else if(a==="col_nuevo"){GNEW=true;GCOL="";GCOLN="";GOPEN=false;GERR="";GFOCUS="g_cnom";gateRender()}
     else if(a==="entrar")await iniciarSesion();
     else if(a==="crear")await crearCuenta();
     else if(a==="completar")await completarRegistro();
@@ -349,13 +427,23 @@ document.addEventListener("click",async function(e){
 document.addEventListener("change",function(e){
   var x=e.target,d=x&&x.dataset;
   if(d&&d.ac==="m_cargo"&&APR){APR.cargo=x.value;render()}
+  else if(d&&d.ac==="rem")GREM=x.checked;
 });
 document.addEventListener("input",function(e){
   var x=e.target,d=x&&x.dataset;if(!d)return;
-  if(d.gf)GF[d.gf]=x.value;
+  if(d.gf){GF[d.gf]=x.value;if(d.gf==="cnom")schUpdate();else if(d.gf==="pass"||d.gf==="pass2")pwUpdate();else if(d.gf==="email"&&x.classList.contains("bad")&&gEmailOk(x.value.trim()))x.classList.remove("bad")}
   else if(d.ac==="m_equipo"&&APR)APR.equipo=x.value;
 });
 document.addEventListener("keydown",function(e){
   if(e.key!=="Enter"||!e.target||!e.target.dataset||!e.target.dataset.gf)return;
   var b=document.querySelector("[data-ac=entrar],[data-ac=crear],[data-ac=completar]");if(b)b.click();
+});
+function capsChk(e){
+  var x=e.target,w=x&&x.closest&&x.closest(".gpw");if(!w||!e.getModifierState)return;
+  var c=w.nextElementSibling;if(c&&c.classList.contains("gcaps"))c.hidden=!e.getModifierState("CapsLock");
+}
+document.addEventListener("keydown",capsChk);
+document.addEventListener("keyup",capsChk);
+document.addEventListener("focusout",function(e){
+  var x=e.target;if(x&&x.id==="g_email"){var v=x.value.trim();x.classList.toggle("bad",!!v&&!gEmailOk(v))}
 });

@@ -2,7 +2,7 @@
 const fs = require("fs"), path = require("path");
 const src = path.join(__dirname, "src");
 const tpl = fs.readFileSync(path.join(src, "index.template.html"), "utf8");
-const css = fs.readFileSync(path.join(src, "styles.css"), "utf8").trimEnd();
+const css = ["styles.css", "gate.css"].map(f => fs.readFileSync(path.join(src, f), "utf8").trimEnd()).join("\n");
 const js = fs.readdirSync(path.join(src, "js")).filter(f => f.endsWith(".js")).sort()
   .map(f => fs.readFileSync(path.join(src, "js", f), "utf8").trimEnd()).join("\n");
 const out = tpl.replace("/*@@CSS@@*/", () => css).replace("/*@@JS@@*/", () => js);

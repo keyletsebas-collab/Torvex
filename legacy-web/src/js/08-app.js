@@ -9,9 +9,15 @@ function addTeam(){
 }
 async function boot(){
   load();LOCAL=S.list.slice();
+  if(REQ_LOGIN){await authInit();return}
   try{if(window.claude&&claude.use){U=await claude.use("user");DB=await claude.use("db");DL=await claude.use("downloads")}}catch(e){}
   if(U){try{ADMIN=!!((await U.isOwner())||(await U.canEdit()));UID=await U.id();NAME=await U.name()}catch(e){}}
-  if(DB){
+  if(DB)suscribir();
+  if(!DB){try{var c0=JSON.parse(localStorage.getItem("torneo-cfg"));if(c0)CFG=Object.assign(CFG,c0)}catch(e){}}
+  BOOT=true;render();
+}
+function suscribir(){
+  {
     S={cur:null,list:[]};
     DB.collection("torneos").onSnapshot(function(q){S.list=q.docs.map(function(d){return JSON.parse(JSON.stringify(d.data()))});if(!cur())S.cur=null;notifyDiff();soft()},function(){toast("Sin conexión con los datos compartidos")});
     DB.collection("roles").onSnapshot(function(q){ROLES={};q.docs.forEach(function(d){ROLES[d.id]=d.data()});soft()},function(){});
@@ -27,8 +33,6 @@ async function boot(){
     if(ADMIN)DB.collection("solicitudes").onSnapshot(function(q){SOL={};q.docs.forEach(function(d){SOL[d.id]=d.data()});soft()},function(){});
     else if(UID)DB.doc("solicitudes/"+UID).onSnapshot(function(d){MYREQ=d.exists?d.data():null;soft()},function(){});
   }
-  if(!DB){try{var c0=JSON.parse(localStorage.getItem("torneo-cfg"));if(c0)CFG=Object.assign(CFG,c0)}catch(e){}}
-  BOOT=true;render();
 }
 document.addEventListener("click",function(e){
   var b=e.target.closest("[data-a]");if(!b||b.tagName!="BUTTON"||b.disabled)return;

@@ -10,22 +10,22 @@ public sealed class Temas
 {
     public static readonly Paleta[] Paletas =
     {
-        new("grafito", "Grafito", 220, 6),
-        new("azul", "Azul", 217, 62),
-        new("indigo", "Índigo", 243, 54),
-        new("violeta", "Violeta", 270, 50),
-        new("esmeralda", "Esmeralda", 158, 52),
-        new("ambar", "Ámbar", 32, 70)
+        new("grafito", "Grafito", 220, 12),
+        new("pizarra", "Pizarra", 218, 26),
+        new("indigo", "Índigo", 235, 28),
+        new("violeta", "Violeta", 262, 24),
+        new("salvia", "Salvia", 160, 22),
+        new("arena", "Arena", 34, 24)
     };
 
-    public static readonly (string Clave, string Nombre)[] Modos = { ("sistema", "Automático"), ("claro", "Claro"), ("oscuro", "Oscuro") };
+    public static readonly (string Clave, string Nombre)[] Modos = { ("oscuro", "Oscuro"), ("claro", "Claro suave"), ("sistema", "Automático") };
 
-    public string PaletaActual { get; private set; } = Preferences.Default.Get("tema", "indigo");
-    public string ModoActual { get; private set; } = Preferences.Default.Get("modo", "sistema");
+    public string PaletaActual { get; private set; } = Preferences.Default.Get("tema", "pizarra");
+    public string ModoActual { get; private set; } = Preferences.Default.Get("modo", "oscuro");
 
     public event Action? Cambio;
 
-    public Paleta Paleta => Paletas.FirstOrDefault(p => p.Clave == PaletaActual) ?? Paletas[2];
+    public Paleta Paleta => Paletas.FirstOrDefault(p => p.Clave == PaletaActual) ?? Paletas[1];
 
     public async Task AplicarAsync(IJSRuntime js)
     {

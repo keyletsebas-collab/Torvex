@@ -1,0 +1,174 @@
+/* ---------- Acceso obligatorio: login, crear cuenta, espera y miembros ---------- */
+body.gating #shell,body.gating .toast:not([role]){display:none}
+.gate{position:fixed;inset:0;z-index:1000;display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:max(24px,6vh) 16px 40px;background:radial-gradient(1200px 600px at 50% -10%,#232936 0%,var(--page) 60%);color:var(--ink);font-family:Inter,system-ui,sans-serif}
+.gate[hidden]{display:none}
+.gate.wait{background:#000;align-items:center}
+.gbox{width:100%;max-width:420px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:24px 22px 22px;box-shadow:0 20px 60px rgba(0,0,0,.45);animation:gin .35s ease both}
+@keyframes gin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.gbrand{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.glogo{width:44px;height:44px;border-radius:12px;background:var(--chip);display:grid;place-items:center;font-size:24px}
+.gbrand b{display:block;font-size:17px;letter-spacing:.2px}
+.gbrand small{color:var(--mute);font-size:12px}
+.gtabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;background:var(--soft);border:1px solid var(--line);border-radius:12px;margin-bottom:16px}
+.gtabs button{border:0;background:transparent;color:var(--mute);font:600 13px Inter,sans-serif;padding:9px 6px;border-radius:9px;cursor:pointer;transition:background .2s,color .2s}
+.gtabs button.on{background:var(--hi);color:var(--ink)}
+.gbox label{display:block;margin:12px 0 5px;font-size:12px;font-weight:600;color:var(--mute)}
+.gin{width:100%;box-sizing:border-box;background:var(--soft);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:11px 12px;font:500 14px Inter,sans-serif;outline:none;transition:border-color .2s,box-shadow .2s}
+.gin:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(91,111,140,.25)}
+.gh{margin:0 0 4px;font-size:18px}
+.gs{margin:10px 0 0;font-size:12px;line-height:1.5;color:var(--mute)}
+.gload{text-align:center;padding:18px 0}
+.gerr{margin:12px 0 0;padding:9px 11px;border-radius:9px;background:rgba(160,60,60,.15);border:1px solid rgba(190,90,90,.35);color:#E8B4B4;font-size:12.5px}
+.gpri{width:100%;margin-top:16px;border:0;border-radius:11px;padding:12px;background:var(--acc);color:#fff;font:700 14px Inter,sans-serif;cursor:pointer;transition:filter .2s,transform .1s}
+.gpri:hover{filter:brightness(1.12)}.gpri:active{transform:scale(.99)}.gpri:disabled{opacity:.6;cursor:wait}
+.glink{display:block;margin:14px auto 0;background:none;border:0;color:var(--mute);font:600 12.5px Inter,sans-serif;text-decoration:underline;cursor:pointer}
+/* interruptor "Organizador" */
+.gorg{display:flex;align-items:center;gap:12px;width:100%;margin-top:16px;padding:11px 12px;background:var(--soft);border:1px solid var(--line);border-radius:12px;color:var(--ink);text-align:left;cursor:pointer;transition:border-color .2s,background .2s}
+.gorg.on{border-color:var(--acc);background:var(--win)}
+.gsw{flex:none;width:40px;height:22px;border-radius:99px;background:var(--line);position:relative;transition:background .2s}
+.gsw i{position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s}
+.gorg.on .gsw{background:var(--acc)}.gorg.on .gsw i{transform:translateX(18px)}
+.got b{display:block;font-size:14px}.got small{display:block;margin-top:2px;color:var(--mute);font-size:11.5px}
+/* barra que baja con los colegios registrados */
+.gdd{position:relative}
+.gddb{display:flex;align-items:center;justify-content:space-between;width:100%;padding:11px 12px;background:var(--soft);color:var(--ink);border:1px solid var(--line);border-radius:10px;font:500 14px Inter,sans-serif;cursor:pointer}
+.gddb i{font-style:normal;transition:transform .25s}
+.gdd.open .gddb{border-color:var(--acc)}.gdd.open .gddb i{transform:rotate(180deg)}
+.gddl{max-height:0;overflow:hidden;opacity:0;margin-top:0;background:var(--soft);border:1px solid transparent;border-radius:10px;transition:max-height .3s ease,opacity .2s,margin .2s,border-color .2s}
+.gdd.open .gddl{max-height:240px;overflow:auto;opacity:1;margin-top:6px;border-color:var(--line)}
+.gddl button{display:block;width:100%;padding:10px 12px;background:none;border:0;border-bottom:1px solid var(--line);color:var(--ink);font:500 13.5px Inter,sans-serif;text-align:left;cursor:pointer}
+.gddl button:hover,.gddl button.on{background:var(--hi)}
+.gddl .gnew{color:#fff;font-weight:700;border-bottom:0;background:var(--chip)}
+.gempty{margin:0;padding:12px;color:var(--mute);font-size:12.5px}
+/* pantalla de espera (negra) */
+.gwait{max-width:380px;text-align:center;color:#fff;animation:gin .4s ease both}
+.gwait h2{margin:22px 0 8px;font-size:20px}
+.gwait p{margin:0;color:#9aa3b2;font-size:13.5px;line-height:1.55}
+.gwait .glink{color:#9aa3b2}
+.gpulse{width:76px;height:76px;margin:0 auto;border-radius:50%;border:1px solid #333;display:grid;place-items:center;animation:gp 1.8s ease-in-out infinite}
+.gpulse i{width:18px;height:18px;border-radius:50%;background:#fff}
+@keyframes gp{0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,.25)}50%{box-shadow:0 0 0 18px rgba(255,255,255,0)}}
+/* código del colegio y miembros */
+.gcode .gcv{margin:10px 0;padding:12px;border-radius:10px;background:var(--soft);border:1px dashed var(--line);text-align:center}
+.gcode code{font:700 20px ui-monospace,Consolas,monospace;letter-spacing:2px;color:var(--ink)}
+.mrw .pl{align-items:center}
+.mact{display:flex;gap:8px;margin-top:8px}
+.mok,.mno{width:38px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--soft);color:var(--ink);font-size:16px;cursor:pointer}
+.mok:hover{background:var(--ok);color:#fff}.mno:hover{background:#8a3c3c;color:#fff}
+.mpan{margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+
+/* ---------- colegio animado ---------- */
+.gcol.enter{animation:gcolIn .5s cubic-bezier(.2,.8,.2,1) both}
+@keyframes gcolIn{from{opacity:0;transform:translateY(-14px) scale(.97)}to{opacity:1;transform:none}}
+.gsch{--sh:215;position:relative;margin:14px 0 6px;padding:8px 10px 14px;border-radius:16px;overflow:hidden;border:1px solid var(--line);background:linear-gradient(180deg,hsl(var(--sh) 32% 24%) 0%,hsl(var(--sh) 24% 13%) 100%);transition:background .7s ease}
+.gsch::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.07) 50%,transparent 65%);transform:translateX(-120%);animation:gsShine 5s ease-in-out 1s infinite}
+@keyframes gsShine{0%,60%{transform:translateX(-120%)}100%{transform:translateX(120%)}}
+.gsch-svg{display:block;width:100%;max-height:150px;overflow:visible}
+.gs-ground{fill:hsl(var(--sh) 18% 10%);transition:fill .7s}
+.gs-wall{fill:hsl(var(--sh) 20% 40%);transition:fill .7s}
+.gs-roof{fill:hsl(var(--sh) 26% 28%);transition:fill .7s}
+.gs-crest{fill:#eef1f6}
+.gs-init{font:800 14px Inter,system-ui,sans-serif;fill:hsl(var(--sh) 35% 26%);transition:fill .7s}
+.gs-door{fill:hsl(var(--sh) 28% 20%);transition:fill .7s}
+.gs-step{fill:hsl(var(--sh) 12% 62%);transition:fill .7s}
+.gs-win{fill:hsl(var(--sh) 18% 20%);transition:fill .4s ease,filter .4s ease;transition-delay:calc(var(--i)*70ms)}
+.gs-win.on{fill:#ffe7a0;filter:drop-shadow(0 0 4px rgba(255,214,120,.95))}
+.gs-flag line{stroke:#d3dae6;stroke-width:1.6;stroke-linecap:round}
+.gs-fl{fill:hsl(var(--sh) 60% 64%);transform-box:view-box;transform-origin:120px 12px;animation:gsWave 1.7s ease-in-out infinite;transition:fill .7s}
+@keyframes gsWave{0%,100%{transform:skewY(0) scaleX(1)}50%{transform:skewY(-9deg) scaleX(.82)}}
+.gs-cl{fill:rgba(255,255,255,.13)}
+.gs-cl.c1{animation:gsDrift 13s ease-in-out infinite}.gs-cl.c2{animation:gsDrift 19s ease-in-out infinite reverse}
+@keyframes gsDrift{0%,100%{transform:translateX(-14px)}50%{transform:translateX(14px)}}
+.gs-star{fill:#fff;animation:gsTw 2.4s ease-in-out infinite}.gs-star.s2{animation-delay:.8s}.gs-star.s3{animation-delay:1.5s}
+@keyframes gsTw{0%,100%{opacity:.15}50%{opacity:.95}}
+.gsch.enter .gs-bld{transform-box:view-box;transform-origin:120px 134px;animation:gsRise .85s cubic-bezier(.2,.9,.3,1.25) both}
+@keyframes gsRise{from{transform:scaleY(.04);opacity:0}60%{opacity:1}to{transform:scaleY(1);opacity:1}}
+.gsch-sign{position:relative;margin:10px auto 0;max-width:94%;min-height:22px;padding:8px 14px;text-align:center;font:800 16px Inter,system-ui,sans-serif;letter-spacing:.2px;color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:11px;word-break:break-word;backdrop-filter:blur(3px)}
+.gsch-sign.long{font-size:13px}
+.gsch-sign.empty{color:rgba(255,255,255,.55);font-style:italic;font-weight:600;font-size:14px;animation:gsPulse 2.2s ease-in-out infinite}
+@keyframes gsPulse{0%,100%{opacity:.55}50%{opacity:1}}
+.gsch-sign span{display:inline-block;white-space:pre}
+.gsch-sign span.st{animation:gsLetter .5s cubic-bezier(.2,.9,.3,1.3) both;animation-delay:var(--d,0ms)}
+@keyframes gsLetter{from{opacity:0;transform:translateY(8px) scale(.6)}to{opacity:1;transform:none}}
+.gsch-sign span.pop{animation:gsPop .32s cubic-bezier(.3,1.7,.5,1) both}
+@keyframes gsPop{from{opacity:0;transform:scale(.3) translateY(6px)}to{opacity:1;transform:none}}
+.gsch-sign.edit:not(.empty)::after{content:"";display:inline-block;width:2px;height:1.05em;margin-left:3px;vertical-align:-3px;background:#fff;animation:gsCaret 1s steps(1) infinite}
+@keyframes gsCaret{50%{opacity:0}}
+
+/* ---------- acceso mas vivo ---------- */
+.gate::before,.gate::after{content:"";position:fixed;z-index:-1;width:46vmax;height:46vmax;border-radius:50%;filter:blur(90px);opacity:.28;pointer-events:none}
+.gate::before{background:#4A5B75;left:-14vmax;top:-18vmax;animation:gBlob 16s ease-in-out infinite}
+.gate::after{background:#364256;right:-16vmax;bottom:-20vmax;animation:gBlob 21s ease-in-out infinite reverse}
+.gate.wait::before,.gate.wait::after{display:none}
+@keyframes gBlob{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(6vmax,5vmax) scale(1.15)}}
+.glogo{animation:gFloat 3.2s ease-in-out infinite}
+@keyframes gFloat{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-4px) rotate(3deg)}}
+.gtabs{position:relative}
+.gtabs button.on{box-shadow:0 2px 10px rgba(0,0,0,.25)}
+.gtabs button:not(.on):hover{color:var(--ink)}
+.gin:hover{border-color:#3a4458}
+.gerr{animation:gShake .45s ease both}
+@keyframes gShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(2px)}}
+.gpri{position:relative;overflow:hidden}
+.gpri::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.28) 50%,transparent 70%);transform:translateX(-130%);transition:transform .6s}
+.gpri:hover::after{transform:translateX(130%)}
+.gpri:disabled::after{animation:gsShine 1.2s linear infinite}
+.gorg:hover{border-color:#44506a}
+.gorg.on .gsw i{animation:gSw .35s cubic-bezier(.3,1.6,.5,1)}
+@keyframes gSw{from{width:16px}50%{width:22px}to{width:16px}}
+.gdd.open .gddl button{animation:gOpt .32s ease both}
+.gdd.open .gddl button:nth-child(2){animation-delay:.05s}.gdd.open .gddl button:nth-child(3){animation-delay:.1s}.gdd.open .gddl button:nth-child(4){animation-delay:.15s}.gdd.open .gddl button:nth-child(n+5){animation-delay:.2s}
+@keyframes gOpt{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+.gddl button{transition:background .15s,padding-left .15s}
+.gddl button:hover{padding-left:18px}
+.gdd.open .gddb i{color:var(--acc)}
+.gform-in{animation:gin .35s ease both}
+@media (prefers-reduced-motion:reduce){.gate *,.gate::before,.gate::after,.gsch *{animation:none!important;transition:none!important}}
+
+/* ---------- acceso: mejoras de uso ---------- */
+.gbox{max-width:440px}
+.gbody.sl-r{animation:gSlR .4s cubic-bezier(.2,.8,.2,1) both}
+.gbody.sl-l{animation:gSlL .4s cubic-bezier(.2,.8,.2,1) both}
+@keyframes gSlR{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}
+@keyframes gSlL{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:none}}
+.gtabs::before{content:"";position:absolute;top:4px;bottom:4px;left:4px;width:calc(50% - 4px);border-radius:9px;background:var(--hi);box-shadow:0 2px 10px rgba(0,0,0,.25);transition:transform .35s cubic-bezier(.3,1.3,.5,1)}
+.gtabs[data-m=crear]::before{transform:translateX(100%)}
+.gtabs button{position:relative;z-index:1}
+.gtabs button.on{background:transparent;box-shadow:none}
+.gh{font-size:20px;margin:2px 0 2px}
+.gsub{margin:0 0 6px}
+.gsec{display:flex;align-items:center;gap:9px;margin:18px 0 2px;font-size:12px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--mute)}
+.gsec span{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--acc);color:#fff;font-size:11px;letter-spacing:0}
+.gsec::after{content:"";flex:1;height:1px;background:var(--line)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g2>div{min-width:0}
+@media(max-width:420px){.g2{grid-template-columns:1fr}}
+.gpw{position:relative}
+.gpw .gin{padding-right:42px}
+.geye{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:34px;height:34px;display:grid;place-items:center;background:none;border:0;border-radius:8px;color:var(--mute);cursor:pointer;transition:color .2s,background .2s}
+.geye:hover{color:var(--ink);background:var(--hi)}
+.geye svg{width:18px;height:18px;grid-area:1/1}
+.geye .eye-c{display:none}
+.geye.on .eye-o{display:none}.geye.on .eye-c{display:block}
+.geye.on{color:var(--ink)}
+.gcaps{display:block;margin-top:5px;font-size:11.5px;font-weight:600;color:#E5C98A;animation:gin .25s ease both}
+.gcaps[hidden]{display:none}
+.gpinfo{display:grid;grid-template-columns:1fr auto;grid-template-areas:"m m" "l c";gap:5px 8px;margin-top:8px}
+.gmeter{grid-area:m;display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.gmeter i{height:4px;border-radius:3px;background:var(--line);transition:background .3s}
+.gmeter[data-s="1"] i:nth-child(1){background:#B86A6A}
+.gmeter[data-s="2"] i:nth-child(-n+2){background:#C9A35F}
+.gmeter[data-s="3"] i:nth-child(-n+3){background:#7FA08A}
+.gmeter[data-s="4"] i{background:#5FB08A}
+.gmeterl{grid-area:l;font-size:11.5px;color:var(--mute)}
+.gmatch{grid-area:c;font-size:11.5px;font-weight:600;color:var(--mute)}
+.gmatch.ok{color:#7FC0A0}.gmatch.no{color:#D08A8A}
+.gbox label.grem{display:flex;align-items:center;gap:9px;margin:14px 0 0;font-size:12.5px;font-weight:500;color:var(--mute);cursor:pointer}
+.grem input{appearance:none;flex:none;width:18px;height:18px;margin:0;border:1px solid var(--line);border-radius:5px;background:var(--soft);display:grid;place-items:center;cursor:pointer;transition:background .2s,border-color .2s}
+.grem input:checked{background:var(--acc);border-color:var(--acc)}
+.grem input:checked::after{content:"";width:5px;height:9px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg) translate(-1px,-1px);animation:gPop2 .2s ease both}
+@keyframes gPop2{from{transform:rotate(45deg) scale(0)}to{transform:rotate(45deg) scale(1)}}
+.gin.bad{border-color:#B86A6A;box-shadow:0 0 0 3px rgba(184,106,106,.18)}
+.gpri:disabled::before{content:"";display:inline-block;width:14px;height:14px;margin-right:9px;vertical-align:-2px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:gSpin .7s linear infinite}
+@keyframes gSpin{to{transform:rotate(360deg)}}
+.glink:hover{color:var(--ink)}

@@ -33,6 +33,7 @@ function load() {
     confirm: m => { state.confirms.push(m); return state.answer; }, alert() {}, console, Math, Date, JSON, location: {}, DBs
   };
   ctx.window = ctx;
+  ctx.SIN_LOGIN = true;
   vm.createContext(ctx);
   vm.runInContext(code, ctx);
   const run = x => vm.runInContext(x, ctx);

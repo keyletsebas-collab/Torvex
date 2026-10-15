@@ -213,10 +213,10 @@ function vEquipo(){
   else h+='<div class="rs">'+(R.coach?'<p class="hint">Entrenador: '+esc(R.coach)+'</p>':"")+((R.pl||[]).length?R.pl.map(function(p){return'<div class="pl rr"><span class="av">'+esc(String(p.n||"?").slice(0,1).toUpperCase())+'</span><span class="pn">'+esc(p.n)+(p.cap?" <small>Capitán</small>":"")+(p.st?"":" <small>Banca</small>")+'<br><span class="hint">'+esc(p.pos||"Sin posición")+'</span></span><b class="num">#'+esc(p.num||"-")+'</b></div>'}).join(""):'<p class="empty">Todavía no hay jugadores registrados.</p>')+'</div>';
   return h;
 }
-var CRC=[["#F5B301","#B07A00"],["#10B981","#047857"],["#EF4444","#B91C1C"],["#3B82F6","#1D4ED8"],["#8B5CF6","#6D28D9"],["#84CC16","#4D7C0F"],["#06B6D4","#0E7490"],["#94A3B8","#475569"]];
+var CRC=[["#2D3648","#3F4B63"],["#343E52","#47546E"],["#283040","#39445A"],["#3B465C","#4E5C78"],["#30394B","#434F67"],["#384257","#4B5873"],["#2B3344","#3C475E"],["#3E4A61","#52607C"]];
 function shield(n){
   var c=String(n).trim(),k=CRC[(c.charCodeAt(0)||0)%8];
-  return'<svg class="cr sh" viewBox="0 0 24 28" aria-hidden="true"><path d="M12 1.5l9.500 3.200v8.600c0 6.200-4.200 10.500-9.500 13.200C6.700 23.800 2.500 19.500 2.500 13.300V4.700L12 1.500z" fill="'+k[0]+'" stroke="'+k[1]+'" stroke-width="1.600"/><path d="M12 5v19" stroke="rgba(255,255,255,.28)" stroke-width="1"/><text x="12" y="17" text-anchor="middle" font-size="11" font-weight="800" fill="#fff" font-family="Inter,sans-serif">'+esc(c.slice(0,1).toUpperCase())+'</text></svg>';
+  return'<svg class="cr sh" viewBox="0 0 24 28" aria-hidden="true"><path d="M12 1.5l9.500 3.200v8.600c0 6.200-4.200 10.500-9.500 13.200C6.700 23.800 2.500 19.500 2.500 13.300V4.700L12 1.500z" fill="'+k[0]+'" stroke="'+k[1]+'" stroke-width="1.600"/><path d="M12 5v19" stroke="rgba(255,255,255,.12)" stroke-width="1"/><text x="12" y="17" text-anchor="middle" font-size="11" font-weight="800" fill="#D5DCE6" font-family="Inter,sans-serif">'+esc(c.slice(0,1).toUpperCase())+'</text></svg>';
 }
 function crest(t,n){
   var u=(ESC[String(t.id)]||{})[lkey(n)];

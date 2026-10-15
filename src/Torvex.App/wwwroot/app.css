@@ -5,40 +5,40 @@
    ===================================================================== */
 
 :root {
-    --h: 243;
-    --s: 54%;
+    --h: 218;
+    --s: 26%;
 
-    /* luminosidades, modo claro */
-    --l-bg: 96.5%;
-    --l-surface: 100%;
-    --l-raised: 94%;
-    --l-line: 89%;
-    --l-line-strong: 80%;
-    --l-text: 11%;
-    --l-muted: 42%;
-    --l-faint: 62%;
-    --l-accent: 40%;
-    --l-accent-hover: 33%;
-    --l-accent-soft: 94%;
-    --l-accent-line: 85%;
-    --l-on-accent: 99%;
-    --sombra: 0 1px 2px hsl(var(--h) 30% 20% / .06), 0 8px 24px -12px hsl(var(--h) 30% 20% / .18);
-    --sombra-grande: 0 24px 60px -20px hsl(var(--h) 40% 15% / .35);
+    /* por defecto: modo oscuro mate (descanso visual, sin brillos fuertes) */
+    --l-bg: 9.5%;
+    --l-surface: 12.5%;
+    --l-raised: 15.5%;
+    --l-line: 19%;
+    --l-line-strong: 25%;
+    --l-text: 85%;
+    --l-muted: 60%;
+    --l-faint: 44%;
+    --l-accent: 56%;
+    --l-accent-hover: 62%;
+    --l-accent-soft: 17%;
+    --l-accent-line: 26%;
+    --l-on-accent: 11%;
+    --sombra: 0 1px 2px #0005, 0 10px 28px -14px #0008;
+    --sombra-grande: 0 24px 56px -20px #000a;
 
     /* colores derivados (todos del mismo tono) */
-    --bg: hsl(var(--h) calc(var(--s) * .22) var(--l-bg));
-    --surface: hsl(var(--h) calc(var(--s) * .12) var(--l-surface));
-    --raised: hsl(var(--h) calc(var(--s) * .22) var(--l-raised));
-    --line: hsl(var(--h) calc(var(--s) * .22) var(--l-line));
-    --line-strong: hsl(var(--h) calc(var(--s) * .25) var(--l-line-strong));
-    --text: hsl(var(--h) calc(var(--s) * .45) var(--l-text));
-    --muted: hsl(var(--h) calc(var(--s) * .2) var(--l-muted));
-    --faint: hsl(var(--h) calc(var(--s) * .15) var(--l-faint));
+    --bg: hsl(var(--h) calc(var(--s) * .35) var(--l-bg));
+    --surface: hsl(var(--h) calc(var(--s) * .32) var(--l-surface));
+    --raised: hsl(var(--h) calc(var(--s) * .35) var(--l-raised));
+    --line: hsl(var(--h) calc(var(--s) * .32) var(--l-line));
+    --line-strong: hsl(var(--h) calc(var(--s) * .35) var(--l-line-strong));
+    --text: hsl(var(--h) calc(var(--s) * .28) var(--l-text));
+    --muted: hsl(var(--h) calc(var(--s) * .22) var(--l-muted));
+    --faint: hsl(var(--h) calc(var(--s) * .18) var(--l-faint));
     --accent: hsl(var(--h) var(--s) var(--l-accent));
     --accent-hover: hsl(var(--h) var(--s) var(--l-accent-hover));
-    --accent-soft: hsl(var(--h) calc(var(--s) * .8) var(--l-accent-soft));
-    --accent-line: hsl(var(--h) calc(var(--s) * .6) var(--l-accent-line));
-    --on-accent: hsl(var(--h) calc(var(--s) * .3) var(--l-on-accent));
+    --accent-soft: hsl(var(--h) calc(var(--s) * .65) var(--l-accent-soft));
+    --accent-line: hsl(var(--h) calc(var(--s) * .55) var(--l-accent-line));
+    --on-accent: hsl(var(--h) calc(var(--s) * .25) var(--l-on-accent));
 
     --r: 16px;
     --r-sm: 11px;
@@ -48,43 +48,62 @@
     --fuente-titulo: "Segoe UI Variable Display", "Segoe UI", Inter, system-ui, -apple-system, Roboto, sans-serif;
 }
 
-/* modo oscuro elegido a mano */
-:root[data-modo="oscuro"] {
-    --l-bg: 7.5%;
-    --l-surface: 10.5%;
-    --l-raised: 14%;
-    --l-line: 17%;
-    --l-line-strong: 25%;
-    --l-text: 94%;
-    --l-muted: 66%;
-    --l-faint: 46%;
-    --l-accent: 70%;
-    --l-accent-hover: 78%;
-    --l-accent-soft: 16%;
-    --l-accent-line: 28%;
-    --l-on-accent: 9%;
-    --sombra: 0 1px 2px #0006, 0 10px 30px -14px #000a;
-    --sombra-grande: 0 30px 70px -20px #000c;
+/* modo claro suave (papel piedra, sin blanco puro brillante) */
+:root[data-modo="claro"] {
+    --l-bg: 88%;
+    --l-surface: 92%;
+    --l-raised: 84.5%;
+    --l-line: 79%;
+    --l-line-strong: 71%;
+    --l-text: 18%;
+    --l-muted: 42%;
+    --l-faint: 56%;
+    --l-accent: 38%;
+    --l-accent-hover: 32%;
+    --l-accent-soft: 83%;
+    --l-accent-line: 74%;
+    --l-on-accent: 94%;
+    --sombra: 0 1px 2px hsl(var(--h) 20% 20% / .06), 0 8px 24px -12px hsl(var(--h) 20% 20% / .14);
+    --sombra-grande: 0 24px 60px -20px hsl(var(--h) 25% 15% / .24);
 }
 
-/* modo oscuro automático (según el sistema) */
-@media (prefers-color-scheme: dark) {
+/* modo oscuro elegido a mano */
+:root[data-modo="oscuro"] {
+    --l-bg: 9.5%;
+    --l-surface: 12.5%;
+    --l-raised: 15.5%;
+    --l-line: 19%;
+    --l-line-strong: 25%;
+    --l-text: 85%;
+    --l-muted: 60%;
+    --l-faint: 44%;
+    --l-accent: 56%;
+    --l-accent-hover: 62%;
+    --l-accent-soft: 17%;
+    --l-accent-line: 26%;
+    --l-on-accent: 11%;
+    --sombra: 0 1px 2px #0005, 0 10px 28px -14px #0008;
+    --sombra-grande: 0 24px 56px -20px #000a;
+}
+
+/* modo automático cuando el sistema es claro */
+@media (prefers-color-scheme: light) {
     :root[data-modo="sistema"] {
-        --l-bg: 7.5%;
-        --l-surface: 10.5%;
-        --l-raised: 14%;
-        --l-line: 17%;
-        --l-line-strong: 25%;
-        --l-text: 94%;
-        --l-muted: 66%;
-        --l-faint: 46%;
-        --l-accent: 70%;
-        --l-accent-hover: 78%;
-        --l-accent-soft: 16%;
-        --l-accent-line: 28%;
-        --l-on-accent: 9%;
-        --sombra: 0 1px 2px #0006, 0 10px 30px -14px #000a;
-        --sombra-grande: 0 30px 70px -20px #000c;
+        --l-bg: 88%;
+        --l-surface: 92%;
+        --l-raised: 84.5%;
+        --l-line: 79%;
+        --l-line-strong: 71%;
+        --l-text: 18%;
+        --l-muted: 42%;
+        --l-faint: 56%;
+        --l-accent: 38%;
+        --l-accent-hover: 32%;
+        --l-accent-soft: 83%;
+        --l-accent-line: 74%;
+        --l-on-accent: 94%;
+        --sombra: 0 1px 2px hsl(var(--h) 20% 20% / .06), 0 8px 24px -12px hsl(var(--h) 20% 20% / .14);
+        --sombra-grande: 0 24px 60px -20px hsl(var(--h) 25% 15% / .24);
     }
 }
 
@@ -114,10 +133,10 @@ button { cursor: pointer; }
 .oculto-visual { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 
 /* ---------- arranque ---------- */
-.arranque { position: fixed; inset: 0; display: grid; place-items: center; background: #14172e; }
+.arranque { position: fixed; inset: 0; display: grid; place-items: center; background: var(--bg); }
 .arranque-logo {
     width: 76px; height: 76px; border-radius: 24px; display: grid; place-items: center;
-    background: #eef0ff; color: #14172e; font: 800 36px var(--fuente-titulo);
+    background: var(--raised); color: var(--text); border: 1px solid var(--line); font: 800 36px var(--fuente-titulo);
     animation: respira 1.4s ease-in-out infinite;
 }
 @keyframes respira { 50% { transform: scale(.92); opacity: .75; } }
