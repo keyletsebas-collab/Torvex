@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="..\build\Torvex.App.props" />
-</Project>
