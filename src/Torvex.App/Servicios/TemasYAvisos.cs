@@ -1,5 +1,3 @@
-using Microsoft.JSInterop;
-
 namespace Torvex.App.Servicios;
 
 /// <summary>Una paleta monocromática: todo el color de la app sale de un solo tono.</summary>
@@ -27,21 +25,24 @@ public sealed class Temas
 
     public Paleta Paleta => Paletas.FirstOrDefault(p => p.Clave == PaletaActual) ?? Paletas[1];
 
-    public async Task AplicarAsync(IJSRuntime js)
+    public async Task AplicarAsync(HybridWebView? hw)
     {
-        try { await js.InvokeVoidAsync("torvex.aplicarTema", Paleta.Tono, Paleta.Saturacion, ModoActual); } catch { }
+        if (hw == null) return;
+        try { await hw.InvokeJavaScriptAsync("torvex.aplicarTema", Paleta.Tono, Paleta.Saturacion, ModoActual); } catch { }
     }
 
-    public async Task ElegirPaletaAsync(string clave, IJSRuntime js)
+    public async Task ElegirPaletaAsync(string clave, HybridWebView? hw = null)
     {
         PaletaActual = clave; Preferences.Default.Set("tema", clave);
-        await AplicarAsync(js); Cambio?.Invoke();
+        if (hw != null) await AplicarAsync(hw);
+        Cambio?.Invoke();
     }
 
-    public async Task ElegirModoAsync(string modo, IJSRuntime js)
+    public async Task ElegirModoAsync(string modo, HybridWebView? hw = null)
     {
         ModoActual = modo; Preferences.Default.Set("modo", modo);
-        await AplicarAsync(js); Cambio?.Invoke();
+        if (hw != null) await AplicarAsync(hw);
+        Cambio?.Invoke();
     }
 }
 

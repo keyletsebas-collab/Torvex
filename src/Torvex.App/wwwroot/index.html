@@ -5,24 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="description" content="Torvex: torneos escolares de Baseball5, Basket 3x3 y Voleibol." />
     <title>Torvex</title>
-    <base href="/" />
     <link rel="stylesheet" href="app.css" />
     <link rel="icon" href="data:,">
 </head>
 
 <body>
 
-    <div id="app"><div class="arranque"><span class="arranque-logo">T</span></div></div>
-
-    <div id="blazor-error-ui" data-nosnippet>
-        Ocurrió un error inesperado.
-        <a href="." class="reload">Recargar</a>
-        <span class="dismiss">✕</span>
+    <div id="app">
+        <div class="arranque">
+            <span class="arranque-logo">T</span>
+            <p style="margin-top:16px; font-weight:600; color:var(--muted)">Iniciando Torvex...</p>
+        </div>
     </div>
 
+    <!-- Script de comunicación bidireccional nativa provisto por .NET MAUI HybridWebView -->
+    <script src="HybridWebView/HybridWebView.js"></script>
     <script src="torvex.js"></script>
-    <script src="_framework/blazor.webview.js" autostart="false"></script>
 
 </body>
-
 </html>

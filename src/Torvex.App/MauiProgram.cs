@@ -15,8 +15,6 @@ public static class MauiProgram
 				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
 			});
 
-		builder.Services.AddMauiBlazorWebView();
-
 		// Servicios de la app (un solo ejemplar para toda la sesión)
 		builder.Services.AddSingleton<SupabaseClient>();
 		builder.Services.AddSingleton<Cuentas>();
@@ -25,7 +23,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<Avisos>();
 
 #if DEBUG
-		builder.Services.AddBlazorWebViewDeveloperTools();
+		builder.Services.AddHybridWebViewDeveloperTools();
 		builder.Logging.AddDebug();
 #endif
 

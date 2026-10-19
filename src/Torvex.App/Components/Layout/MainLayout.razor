@@ -16,20 +16,20 @@
             </div>
             <nav class="nav">
                 <div class="nav-sec">Explorar</div>
-                <NavLink class="nav-item" href="" Match="NavLinkMatch.All" ActiveClass="active"><Icono Nombre="home" />Inicio</NavLink>
-                <NavLink class="nav-item" href="torneos" ActiveClass="active"><Icono Nombre="trophy" />Torneos</NavLink>
-                <NavLink class="nav-item" href="vivo" ActiveClass="active"><Icono Nombre="bolt" />En vivo
+                <NavLink class="nav-item" href="" Match="NavLinkMatch.All"><Icono Nombre="home" />Inicio</NavLink>
+                <NavLink class="nav-item" href="torneos"><Icono Nombre="trophy" />Torneos</NavLink>
+                <NavLink class="nav-item" href="vivo"><Icono Nombre="bolt" />En vivo
                     @if (EnVivo > 0) { <span class="insignia">@EnVivo</span> }
                 </NavLink>
                 @if (Cuentas.EsOrganizador)
                 {
                     <div class="nav-sec">Administración</div>
-                    <NavLink class="nav-item" href="miembros" ActiveClass="active"><Icono Nombre="users" />Miembros
+                    <NavLink class="nav-item" href="miembros"><Icono Nombre="users" />Miembros
                         @if (Pendientes > 0) { <span class="insignia">@Pendientes</span> }
                     </NavLink>
                 }
                 <div class="nav-sec">Cuenta</div>
-                <NavLink class="nav-item" href="ajustes" ActiveClass="active"><Icono Nombre="settings" />Ajustes</NavLink>
+                <NavLink class="nav-item" href="ajustes"><Icono Nombre="settings" />Ajustes</NavLink>
             </nav>
             <div class="side-pie">
                 <NavLink class="yo" href="ajustes">
@@ -44,18 +44,18 @@
         </div>
 
         <nav class="bottom" aria-label="Navegación">
-            <NavLink href="" Match="NavLinkMatch.All" ActiveClass="active"><Icono Nombre="home" />Inicio</NavLink>
-            <NavLink href="torneos" ActiveClass="active"><Icono Nombre="trophy" />Torneos</NavLink>
-            <NavLink href="vivo" ActiveClass="active"><Icono Nombre="bolt" />En vivo
+            <NavLink href="" Match="NavLinkMatch.All"><Icono Nombre="home" />Inicio</NavLink>
+            <NavLink href="torneos"><Icono Nombre="trophy" />Torneos</NavLink>
+            <NavLink href="vivo"><Icono Nombre="bolt" />En vivo
                 @if (EnVivo > 0) { <span class="insignia">@EnVivo</span> }
             </NavLink>
             @if (Cuentas.EsOrganizador)
             {
-                <NavLink href="miembros" ActiveClass="active"><Icono Nombre="users" />Miembros
+                <NavLink href="miembros"><Icono Nombre="users" />Miembros
                     @if (Pendientes > 0) { <span class="insignia">@Pendientes</span> }
                 </NavLink>
             }
-            <NavLink href="ajustes" ActiveClass="active"><Icono Nombre="settings" />Ajustes</NavLink>
+            <NavLink href="ajustes"><Icono Nombre="settings" />Ajustes</NavLink>
         </nav>
     </div>
 }
@@ -67,12 +67,13 @@ else
 <AvisosHost />
 
 @code {
+    bool _disposed;
     bool _orgActivo;
     CancellationTokenSource? _ciclo;
 
     string Inicial => (Cuentas.Perfil?.Nombre ?? "?").Trim().Length > 0 ? Cuentas.Perfil!.Nombre.Trim()[..1].ToUpperInvariant() : "?";
-    int EnVivo => Vivo.EnCurso(Torneos.Lista).Count;
-    int Pendientes => Cuentas.Miembros.Count(m => m.Pendiente);
+    int EnVivo => Torneos.Lista != null ? Vivo.EnCurso(Torneos.Lista).Count : 0;
+    int Pendientes => Cuentas.Miembros?.Count(m => m.Pendiente) ?? 0;
 
     protected override async Task OnInitializedAsync()
     {
@@ -92,6 +93,7 @@ else
 
     void Refrescar()
     {
+        if (_disposed) return;
         // los organizadores consultan los miembros pendientes cada 10 segundos
         if (Cuentas.Estado == EstadoAcceso.Ok && Cuentas.EsOrganizador && !_orgActivo)
         {
@@ -101,7 +103,7 @@ else
             _ = Task.Run(async () =>
             {
                 try { await Cuentas.CargarCodigoAsync(); } catch { }
-                while (!token.IsCancellationRequested)
+                while (!token.IsCancellationRequested && !_disposed)
                 {
                     try { await Cuentas.CargarMiembrosAsync(); } catch { }
                     try { await Task.Delay(10000, token); } catch { return; }
@@ -110,17 +112,30 @@ else
         }
         else if (Cuentas.Estado != EstadoAcceso.Ok && _orgActivo)
         {
-            _orgActivo = false; _ciclo?.Cancel(); _ciclo = null;
+            _orgActivo = false;
+            _ciclo?.Cancel();
+            _ciclo?.Dispose();
+            _ciclo = null;
         }
-        InvokeAsync(StateHasChanged);
+
+        if (!_disposed)
+        {
+            try
+            {
+                _ = InvokeAsync(StateHasChanged);
+            }
+            catch (ObjectDisposedException) { }
+        }
     }
 
     public void Dispose()
     {
+        _disposed = true;
         Cuentas.Cambio -= Refrescar;
         Torneos.Cambio -= Refrescar;
         Torneos.Falla -= AlFallar;
         Temas.Cambio -= Refrescar;
         _ciclo?.Cancel();
+        _ciclo?.Dispose();
     }
 }

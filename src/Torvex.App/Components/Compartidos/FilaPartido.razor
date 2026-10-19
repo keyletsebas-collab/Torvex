@@ -24,7 +24,7 @@
     <div class="pie">
         @if (vivo) { <span class="tag solido"><i class="punto-vivo"></i>En vivo</span> }
         else if (est == "finalizado") { <span class="tag acento">Finalizado</span> }
-        else { <span class="tag">@(char.ToUpper(est[0]) + est[1..])</span> }
+        else if (!string.IsNullOrEmpty(est)) { <span class="tag">@Vista.Capitalizar(est)</span> }
         @if (M.Bo > 1) { <span class="tag">Mejor de @M.Bo</span> }
         @if (MostrarTorneo) { <span>@Deportes.De(T.Sport).Icono @(string.IsNullOrEmpty(T.Name) ? "Edición" : T.Name)</span> }
         @if (!string.IsNullOrEmpty(M.Date)) { <span><Icono Nombre="clock" />@Vista.FechaCorta(M.Date)@(string.IsNullOrEmpty(M.Time) ? "" : " " + M.Time)</span> }

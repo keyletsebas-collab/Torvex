@@ -109,7 +109,7 @@ else
             {
                 <div class="ronda"><h3>@s.Titulo</h3></div>
                 <div class="grid-partidos">
-                    @foreach (var x in s.Items) { <FilaPartido T="T!" R="@x.R" I="x.I" M="x.M" /> }
+                    @foreach (var x in s.Items) { <FilaPartido T="@T" R="@x.R" I="@x.I" M="@x.M" /> }
                 </div>
             }
         }

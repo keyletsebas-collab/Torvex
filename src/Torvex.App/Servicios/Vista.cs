@@ -18,6 +18,9 @@ public static class Vista
     public static IEnumerable<(string R, int I, Partido M)> Jugables(Torneo t) =>
         Formatos.Todos(t).Where(x => x.M.A != null && x.M.B != null && x.M.A != Formatos.Bye && x.M.B != Formatos.Bye);
 
+    public static string Capitalizar(string? s) =>
+        string.IsNullOrEmpty(s) ? "" : char.ToUpper(s[0]) + (s.Length > 1 ? s[1..] : "");
+
     public static string Nombre(string? equipo) => equipo == null ? "Por definir" : equipo == Formatos.Bye ? "Libre" : equipo;
 
     public static bool EsDescanso(Partido m) => ((m.A == null) ^ (m.B == null)) && m.W != null;

@@ -33,7 +33,7 @@
             {
                 <h2>Ahora en vivo</h2>
                 <div class="lista">
-                    @foreach (var x in EnVivo) { <FilaPartido T="x.Torneo" R="@x.Clave" I="x.I" M="x.Partido" MostrarTorneo="true" /> }
+                    @foreach (var x in EnVivo) { <FilaPartido T="@x.Torneo" R="@x.Clave" I="@x.I" M="@x.Partido" MostrarTorneo="true" /> }
                 </div>
             }
 
@@ -45,7 +45,7 @@
             else
             {
                 <div class="lista">
-                    @foreach (var x in Proximos.Take(6)) { <FilaPartido T="x.T" R="@x.R" I="x.I" M="x.M" MostrarTorneo="true" /> }
+                    @foreach (var x in Proximos.Take(6)) { <FilaPartido T="@x.T" R="@x.R" I="@x.I" M="@x.M" MostrarTorneo="true" /> }
                 </div>
             }
 
@@ -57,7 +57,7 @@
             else
             {
                 <div class="lista">
-                    @foreach (var x in Recientes.Take(5)) { <FilaPartido T="x.T" R="@x.R" I="x.I" M="x.M" MostrarTorneo="true" /> }
+                    @foreach (var x in Recientes.Take(5)) { <FilaPartido T="@x.T" R="@x.R" I="@x.I" M="@x.M" MostrarTorneo="true" /> }
                 </div>
             }
         </div>

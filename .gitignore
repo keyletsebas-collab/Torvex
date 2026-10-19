@@ -1,2 +1,15 @@
 node_modules/
 .DS_Store
+Thumbs.db
+
+# .NET build artifacts
+[Bb]in/
+[Oo]bj/
+bld/
+[Dd]ebug/
+[Rr]elease/
+
+# Visual Studio / IDE
+.vs/
+*.user
+*.suo
