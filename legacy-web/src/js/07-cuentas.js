@@ -8,12 +8,16 @@ var MEM=[],MEMERR="",APR=null,MEMT=null,WAITT=null,MYCODE="";
 async function rpc(n,a){var r=await SB.rpc(n,a||{});if(r.error)throw r.error;return r.data}
 function gerr(e){
   var m=String((e&&e.message)||e||""),c=e&&e.code;
+  if(c==="google_cancelled"||e&&e.cancelled)return"Cancelaste el acceso con Google.";
+  if(c==="google_timeout"||e&&e.timeout)return"El acceso con Google tardó demasiado. Inténtalo de nuevo.";
   if(c==="user_already_exists"||/already (been )?registered|already exists/i.test(m))return"Ese correo ya tiene una cuenta. Inicia sesión.";
   if(c==="invalid_credentials"||/invalid login/i.test(m))return"Correo o contraseña incorrectos.";
   if(c==="email_not_confirmed"||/not confirmed/i.test(m))return"Falta desactivar «Confirm email» en Supabase (Authentication, Providers, Email).";
   if(c==="weak_password"||/at least 6|weak password/i.test(m))return"La contraseña debe tener al menos 6 caracteres.";
   if(c==="over_request_rate_limit"||c==="over_email_send_rate_limit"||/rate limit|too many/i.test(m))return"Demasiados intentos. Espera un momento.";
   if(c==="email_address_invalid"||/email.*invalid|invalid.*email/i.test(m))return"Escribe un correo válido.";
+  if(/provider.*not enabled|unsupported provider|google.*not enabled/i.test(m))return"Google todavía no está activado en la configuración de Supabase.";
+  if(/redirect.*(not allowed|url)|redirect_uri/i.test(m))return"La dirección de regreso de Torvex no está permitida en Supabase.";
   if(/failed to fetch|network|load failed/i.test(m))return"No hay conexión con el servidor. Revisa tu internet.";
   return m||"Ocurrió un error. Inténtalo de nuevo.";
 }
@@ -26,6 +30,8 @@ function gateShow(on){document.body.classList.toggle("gating",!!on);var g=$("gat
 var GREM=false,GDIR="",GFOCUS="",PWL=["","Muy corta (mínimo 6)","Aceptable","Buena","Fuerte"];
 try{var gse=localStorage.getItem("torneo-email");if(gse){GF.email=gse;GREM=true}}catch(e){}
 var EYE='<svg class="eye-o" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="eye-c" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.9 10.9 0 0 1 12 19C5 19 1 12 1 12a18.5 18.5 0 0 1 5.06-5.94M9.9 4.24A9.1 9.1 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M1 1l22 22"/></svg>';
+var GICON='<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#4285F4" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.2v5.1h6.7c3.9-3.6 6-8.8 6-15Z"/><path fill="#34A853" d="M24 44c5.5 0 10.1-1.8 13.5-4.8l-6.7-5.1c-1.8 1.2-4 1.9-6.8 1.9-5.2 0-9.6-3.5-11.2-8.2H5.9v5.3A20 20 0 0 0 24 44Z"/><path fill="#FBBC05" d="M12.8 27.8a12 12 0 0 1 0-7.6v-5.3H5.9a20 20 0 0 0 0 18.2l6.9-5.3Z"/><path fill="#EA4335" d="M24 12c3 0 5.7 1 7.8 3.1l5.9-5.9C34.1 5.8 29.5 4 24 4A20 20 0 0 0 5.9 14.9l6.9 5.3C14.4 15.5 18.8 12 24 12Z"/></svg>';
+function gGoogleEntry(){return'<button type="button" class="ggoogle" data-ac="google"'+(GBUSY?' disabled':'')+'>'+GICON+'<span>'+(GBUSY?'Conectando con Google…':'Continuar con Google')+'</span></button><div class="gdivider"><span>o con tu correo</span></div>'}
 function gField(id,label,type,val,extra){
   var inp='<input class="gin" id="'+id+'" data-gf="'+id.slice(2)+'" type="'+type+'" value="'+esc(val||"")+'" '+(extra||"")+'>';
   if(type==="password")inp='<div class="gpw">'+inp+'<button type="button" class="geye" data-ac="ver" data-for="'+id+'" aria-label="Mostrar contraseña" title="Mostrar u ocultar">'+EYE+'</button></div><small class="gcaps" hidden>⇪ Bloq Mayús está activado</small>';
@@ -41,7 +47,8 @@ function pwUpdate(){
     else{q.textContent="No coinciden";q.className="gmatch no"}
   }
 }
-function gCard(inner){return'<div class="gbox"><div class="gbrand"><span class="glogo">🏆</span><div><b>Torneos escolares</b><small>Liga deportiva escolar</small></div></div>'+inner+'</div>'}
+function gVisual(){return'<aside class="gauth-visual" aria-hidden="true"><div class="gauth-kicker"><i></i> TORVEX <span>/</span> DEPORTE ESCOLAR</div><div class="gauth-scene"><svg class="gauth-art" viewBox="0 0 460 250" fill="none"><defs><linearGradient id="field" x1="60" y1="90" x2="400" y2="230" gradientUnits="userSpaceOnUse"><stop stop-color="#4CC9B0"/><stop offset="1" stop-color="#4184C7"/></linearGradient><radialGradient id="stadiumGlow"><stop stop-color="#90F0D2" stop-opacity=".62"/><stop offset="1" stop-color="#90F0D2" stop-opacity="0"/></radialGradient></defs><circle cx="310" cy="112" r="142" fill="url(#stadiumGlow)"/><path class="gstadium" d="M36 154c6-58 64-95 194-95s188 37 194 95" stroke="rgba(255,255,255,.18)" stroke-width="2"/><path d="M69 152c9-39 54-63 161-63s152 24 161 63" stroke="rgba(255,255,255,.24)" stroke-width="2"/><path d="M95 153c12-24 50-38 135-38s123 14 135 38" stroke="rgba(255,255,255,.22)" stroke-width="2"/><path d="M54 145 86 69M406 145l-32-76M89 111 121 60M371 111l-32-51" stroke="rgba(255,255,255,.14)" stroke-width="2"/><path class="gfield" d="M74 148c29-18 83-28 156-28s127 10 156 28l30 71c-42 17-104 26-186 26s-144-9-186-26l30-71Z" fill="url(#field)" fill-opacity=".82" stroke="rgba(225,255,248,.66)" stroke-width="2"/><path d="M230 122v123M74 148c35 19 90 29 156 29s121-10 156-29M44 219c42-17 104-26 186-26s144 9 186 26" stroke="rgba(235,255,250,.58)" stroke-width="1.5"/><ellipse cx="230" cy="177" rx="48" ry="18" stroke="rgba(235,255,250,.58)" stroke-width="1.5"/><circle cx="230" cy="177" r="3" fill="#F4FFF9"/><path d="M58 171h27v32H48v-21c0-6 4-11 10-11Zm317 0h27c6 0 10 5 10 11v21h-37v-32Z" stroke="rgba(235,255,250,.55)" stroke-width="1.5"/><circle class="gorb orb-a" cx="90" cy="63" r="4" fill="#A9F3D8"/><circle class="gorb orb-b" cx="370" cy="52" r="3" fill="#9AC7FF"/><circle class="gorb orb-c" cx="415" cy="113" r="2.5" fill="#F4D990"/><g class="gball"><circle cx="326" cy="151" r="25" fill="#FFF6E7"/><path d="m326 136 9 7-3 11h-12l-3-11 9-7Zm-10 7-9 2-4 9 8 3m28-12 8 2 4 9-8 3m-22 7-1 9 7 6 7-6-1-9" stroke="#53617C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g></svg><div class="gauth-orbit orbit-one"></div><div class="gauth-orbit orbit-two"></div></div><div class="gauth-tagline"><small>UNA TEMPORADA. MIL HISTORIAS.</small><strong>Tu liga.<br>Tu historia.</strong><span>Todo el juego escolar, en un solo lugar.</span></div><div class="gauth-foot"><span class="gauth-foot-mark">✦</span> BASEBALL5 <i></i> BASKET 3X3 <i></i> VOLEIBOL</div></aside>'}
+function gCard(inner){return'<div class="gbox">'+gVisual()+'<div class="gauth-content"><div class="gbrand"><span class="glogo">🏆</span><div><b>Torvex</b><small>Liga deportiva escolar</small></div></div>'+inner+'</div></div>'}
 /* ---------- colegio animado: aparece sin nombre y se va editando con lo que se escribe o elige ---------- */
 var SCHSEEN=false,SCHLAST="";
 function schName(){return GNEW?(GF.cnom||"").trim():(GCOL?GCOLN:"")}
@@ -62,19 +69,29 @@ function schPaint(n){
   w.querySelectorAll(".gs-win").forEach(function(e,i){e.classList.toggle("on",i<lit)});
   var ini=$("gschi");if(ini)ini.textContent=n?n.trim().charAt(0).toUpperCase():"?";
 }
+function schChoiceLabel(){var n=schName();return GNEW?(n||"Escribe el nombre del colegio"):(GCOL?GCOLN:"Elige tu colegio")}
 function schUpdate(){
   var n=schName(),el=$("gschn");if(!el)return;
   var prev=SCHLAST;SCHLAST=n;
-  el.className="gsch-sign"+(n?"":" empty")+(n.length>22?" long":"")+(GNEW?" edit":"");
-  el.innerHTML=schLetters(n,n.length>prev.length?"last":"none");
+  var label=schChoiceLabel();
+  el.className="gsch-sign-text"+(n?"":" empty")+(label.length>22?" long":"")+(GNEW?" edit":"");
+  el.innerHTML=schLetters(label,n.length>prev.length?"last":"none");
+  var btn=el.closest("button");if(btn)btn.setAttribute("aria-label","Colegio: "+label);
   schPaint(n);
+}
+function gSchoolPicker(first,changed){
+  var n=schName(),label=schChoiceLabel(),mode=first||changed?"all":"none";
+  var cls="gsch-sign-text"+(n?"":" empty")+(label.length>22?" long":"")+(GNEW?" edit":"");
+  var h='<div class="gdd gsch-dd'+(GOPEN?" open":"")+'"><button type="button" class="gddb gsch-picker" data-ac="col_abrir" aria-haspopup="listbox" aria-label="Colegio: '+esc(label)+'" aria-expanded="'+(GOPEN?"true":"false")+'"><span class="gsch-pick-label">Colegio</span><span class="'+cls+'" id="gschn" aria-live="polite">'+schLetters(label,mode)+'</span><i aria-hidden="true">▾</i></button><div class="gddl" role="listbox">';
+  h+=COLEGIOS.length?COLEGIOS.map(function(c){var selected=c.id===GCOL&&!GNEW;return'<button type="button" role="option" aria-selected="'+(selected?"true":"false")+'" data-ac="col_pick" data-id="'+esc(c.id)+'" data-n="'+esc(c.nombre)+'" class="'+(selected?"on":"")+'">'+esc(c.nombre)+'</button>'}).join(""):'<p class="gempty">Todavía no hay colegios registrados.</p>';
+  return h+'<button type="button" class="gnew" data-ac="col_nuevo">➕ Mi colegio no está: crear uno nuevo</button></div></div>';
 }
 function gSchool(first){
   var n=schName(),ch=n!==SCHLAST,lit=schLit(n);SCHLAST=n;
   var W=[[60,76],[86,76],[154,76],[180,76],[60,106],[86,106],[154,106],[180,106]].map(function(p,i){
     return'<rect class="gs-win'+(!first&&i<lit?" on":"")+'" style="--i:'+i+'" x="'+p[0]+'" y="'+p[1]+'" width="14" height="18" rx="2"/>';
   }).join("");
-  return'<div class="gsch'+(first?" enter":"")+'" id="gsch" style="--sh:'+schHue(n)+'">'+
+  return'<div class="gsch'+(first?" enter":"")+(GOPEN?" picker-open":"")+'" id="gsch" style="--sh:'+schHue(n)+'">'+
     '<svg class="gsch-svg" viewBox="0 0 240 150" aria-hidden="true">'+
     '<ellipse class="gs-cl c1" cx="38" cy="26" rx="18" ry="6"/><ellipse class="gs-cl c2" cx="196" cy="20" rx="22" ry="7"/><circle class="gs-star s1" cx="20" cy="60" r="1.4"/><circle class="gs-star s2" cx="220" cy="54" r="1.2"/><circle class="gs-star s3" cx="160" cy="14" r="1.1"/>'+
     '<rect class="gs-ground" x="0" y="134" width="240" height="16"/>'+
@@ -83,14 +100,11 @@ function gSchool(first){
     '<g class="gs-flag"><line x1="120" y1="26" x2="120" y2="6"/><path class="gs-fl" d="M120 6 L144 12 L120 19 Z"/></g>'+
     '<circle class="gs-crest" cx="120" cy="50" r="11"/><text class="gs-init" id="gschi" x="120" y="55" text-anchor="middle">'+esc(n?n.trim().charAt(0).toUpperCase():"?")+'</text>'+
     W+'<rect class="gs-door" x="106" y="102" width="28" height="32" rx="3"/><rect class="gs-step" x="100" y="131" width="40" height="4" rx="1"/></g></svg>'+
-    '<div class="gsch-sign'+(n?"":" empty")+(n.length>22?" long":"")+(GNEW?" edit":"")+'" id="gschn" aria-live="polite">'+schLetters(n,first||ch?"all":"none")+'</div></div>';
+    gSchoolPicker(first,ch)+'</div>';
 }
 function gColegio(){
   var first=!SCHSEEN;SCHSEEN=true;
-  var sel=GNEW?"➕ Crear un colegio nuevo":(GCOL?esc(GCOLN):"Elige tu colegio");
-  var h='<div class="gcol'+(first?" enter":"")+'">'+gSchool(first)+'<label>Colegio</label><div class="gdd'+(GOPEN?" open":"")+'"><button type="button" class="gddb" data-ac="col_abrir" aria-expanded="'+(GOPEN?"true":"false")+'"><span>'+sel+'</span><i>▾</i></button><div class="gddl" role="listbox">';
-  h+=COLEGIOS.length?COLEGIOS.map(function(c){return'<button type="button" role="option" data-ac="col_pick" data-id="'+esc(c.id)+'" data-n="'+esc(c.nombre)+'" class="'+(c.id===GCOL&&!GNEW?"on":"")+'">'+esc(c.nombre)+'</button>'}).join(""):'<p class="gempty">Todavía no hay colegios registrados.</p>';
-  h+='<button type="button" class="gnew" data-ac="col_nuevo">➕ Mi colegio no está: crear uno nuevo</button></div></div>';
+  var h='<div class="gcol'+(first?" enter":"")+'">'+gSchool(first);
   if(GNEW)h+=gField("g_cnom","Nombre del colegio","text",GF.cnom,'maxlength="60" autocomplete="off"')+gField("g_cclave","Contraseña del colegio (mínimo 6)","password",GF.cclave,'autocomplete="new-password"')+'<p class="gs">Con esta contraseña otros organizadores podrán unirse a tu colegio. Los estudiantes usan el código que verás en Ajustes.</p>';
   else if(GCOL)h+=gField("g_cclave","Contraseña del colegio","password",GF.cclave,'autocomplete="off"')+'<p class="gs">La puso quien creó el colegio.</p>';
   return h+'</div>';
@@ -103,6 +117,7 @@ function gForm(){
   GDIR="";
   if(lg){
     return gCard(h+'<div class="'+cls+'"><h2 class="gh">Bienvenido de nuevo</h2><p class="gs gsub">Entra con tu correo y tu contraseña.</p>'+
+      gGoogleEntry()+
       gField("g_email","Correo electrónico","email",GF.email,'autocomplete="email" placeholder="tu@correo.com"')+
       gField("g_pass","Contraseña","password",GF.pass,'autocomplete="current-password"')+
       '<label class="grem"><input type="checkbox" data-ac="rem"'+(GREM?" checked":"")+'><span>Recordar mi correo en este equipo</span></label>'+err+
@@ -110,7 +125,7 @@ function gForm(){
       '<button type="button" class="glink" data-ac="modo" data-m="crear">¿No tienes cuenta? Crear una</button></div>');
   }
   var b='<div class="'+cls+'">';
-  if(!comp)b+='<h2 class="gh">Crea tu cuenta</h2><p class="gs gsub">Solo toma un minuto.</p><div class="gsec"><span>1</span>Tus datos</div>'+
+  if(!comp)b+='<h2 class="gh">Crea tu cuenta</h2><p class="gs gsub">Solo toma un minuto.</p>'+gGoogleEntry()+'<div class="gsec"><span>1</span>Tus datos</div>'+
     gField("g_nombre","Nombre","text",GF.nombre,'maxlength="40" autocomplete="name" placeholder="Tu nombre"')+
     gField("g_email","Correo electrónico","email",GF.email,'autocomplete="email" placeholder="tu@correo.com"')+
     '<div class="g2"><div>'+gField("g_pass","Contraseña","password",GF.pass,'autocomplete="new-password" placeholder="Mínimo 6"')+'</div><div>'+gField("g_pass2","Repítela","password",GF.pass2,'autocomplete="new-password"')+'</div></div>'+gMeter()+
@@ -142,7 +157,7 @@ async function authInit(){
   AUTH="carga";render();
   if(!SB_URL||!SB_KEY||!window.supabase||!window.supabase.createClient){AUTH="config";render();return}
   try{
-    SB=window.supabase.createClient(SB_URL,SB_KEY);
+    SB=window.supabase.createClient(SB_URL,SB_KEY,{auth:{flowType:"pkce"}});
     await cargarColegios();
     var r=await SB.auth.getSession(),s=r&&r.data&&r.data.session;
     if(s)await resolverSesion(s);else{AUTH="fuera";GFOCUS="g_email";render()}
@@ -203,7 +218,7 @@ async function crearCuenta(){
     if(!GORG&&!(await rpc("validar_codigo",{p_codigo:GF.codigo})))throw new Error("Código de colegio no válido. Pídeselo al organizador de tu colegio.");
     var r=await SB.auth.signUp({email:email,password:GF.pass,options:{data:{nombre:nombre}}});
     if(r.error)throw r.error;
-    if(!r.data||!r.data.session)throw new Error("Supabase pidió confirmar el correo. Hay que desactivar «Confirm email» en Authentication, Providers, Email.");
+    if(!r.data||!r.data.session){var r2=await SB.auth.signInWithPassword({email:email,password:GF.pass});if(r2.data&&r2.data.session){r=r2;}else{throw new Error("Supabase pidió confirmar el correo. Hay que desactivar «Confirm email» en Authentication, Providers, Email.");}}
     try{await gUnirme()}catch(e2){GERR=gerr(e2)}
     GF.pass=GF.pass2=GF.cclave="";
     await resolverSesion(r.data.session);
@@ -231,6 +246,34 @@ async function iniciarSesion(){
     if(r.error)throw r.error;
     try{if(GREM)localStorage.setItem("torneo-email",email);else localStorage.removeItem("torneo-email")}catch(e2){}
     GF.pass="";await resolverSesion(r.data.session);
+  }catch(e){GERR=gerr(e)}
+  GBUSY=false;if(AUTH!=="ok")gateRender();
+}
+async function iniciarConGoogle(){
+  if(GBUSY)return;
+  GBUSY=true;GERR="";gateRender();
+  try{
+    var bridge=window.HybridWebView,invoke=bridge&&bridge.InvokeDotNet;
+    if(typeof invoke==="function"){
+      var redirectTo=await invoke.call(bridge,"PrepareGoogleRedirectUri");
+      var inicio=await SB.auth.signInWithOAuth({provider:"google",options:{redirectTo:redirectTo,skipBrowserRedirect:true}});
+      if(inicio.error)throw inicio.error;
+      if(!inicio.data||!inicio.data.url)throw new Error("Supabase no devolvió el enlace de Google.");
+      var raw=await invoke.call(bridge,"AuthenticateGoogleAsync",[inicio.data.url]);
+      var cb=typeof raw==="string"?JSON.parse(raw):raw;
+      if(cb&&cb.cancelled)throw{code:"google_cancelled",cancelled:true};
+      if(cb&&cb.timeout)throw{code:"google_timeout",timeout:true};
+      if(cb&&cb.error)throw new Error(cb.error_description||cb.error);
+      if(!cb||!cb.code)throw new Error("Google no devolvió el código de acceso.");
+      var ses=await SB.auth.exchangeCodeForSession(cb.code);
+      if(ses.error)throw ses.error;
+      await resolverSesion(ses.data.session);
+    }else{
+      var callback=new URL(location.href);callback.hash="";callback.search="";
+      var web=await SB.auth.signInWithOAuth({provider:"google",options:{redirectTo:callback.toString()}});
+      if(web.error)throw web.error;
+      return;
+    }
   }catch(e){GERR=gerr(e)}
   GBUSY=false;if(AUTH!=="ok")gateRender();
 }
@@ -392,6 +435,7 @@ document.addEventListener("click",async function(e){
     else if(a==="col_pick"){GCOL=d.id;GCOLN=d.n;GNEW=false;GOPEN=false;GERR="";gateRender()}
     else if(a==="col_nuevo"){GNEW=true;GCOL="";GCOLN="";GOPEN=false;GERR="";GFOCUS="g_cnom";gateRender()}
     else if(a==="entrar")await iniciarSesion();
+    else if(a==="google")await iniciarConGoogle();
     else if(a==="crear")await crearCuenta();
     else if(a==="completar")await completarRegistro();
     else if(a==="salir")await cerrarSesion();

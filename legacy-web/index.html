@@ -240,7 +240,7 @@ main,.two>div{container-type:inline-size}
 .team.w{background:var(--win);color:var(--winink)}
 .team.l .nm{color:var(--mute);text-decoration:line-through}
 .team.bye,.team.wait{color:var(--mute);font-style:italic}
-.sc,.sw{width:56px;text-align:center;padding:6px 4px;background:var(--chip);border:1px solid var(--line);color:var(--ink);border-radius:10px;font-size:1.25rem;font-weight:700;-moz-appearance:textfield}
+.sc,.sw{width:56px;text-align:center;padding:6px 4px;background:var(--chip);border:1px solid var(--line);color:var(--ink);border-radius:10px;font-size:1.25rem;font-weight:700;-moz-appearance:textfield;appearance:textfield}
 body.admin .sc,body.admin .sw{background:var(--chip)}
 .sw{display:inline-block;padding:6px}
 .sc::-webkit-inner-spin-button,.sc::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
@@ -390,6 +390,181 @@ table.t3 td:nth-child(3),table.t3 th:nth-child(3){text-align:left;width:100%}
 .pl .pn .hint,.pn .hint{font-weight:400}
 @media(max-height:860px){.menu .ms{display:none}.menu button{padding-top:6px;padding-bottom:6px}}
 @media(max-width:600px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.kpi{padding:14px}.kpi b{font-size:2rem}.kpi .kh span{font-size:.78rem}.chip{width:34px;height:34px}.kpi .kh{align-items:flex-start;gap:6px}}
+
+/* ---------- sistema visual Torvex ---------- */
+:root{
+  --pri:#18263D;
+  --acc:#4C7DFA;
+  --acc2:#6656E8;
+  --ok:#22B987;
+  --live:#E8536A;
+  --warn:#E7A947;
+  --page:#080E18;
+  --frame:#0E1725;
+  --bg:#0E1725;
+  --card:#151F30;
+  --soft:#101A2A;
+  --ink:#EEF3FC;
+  --mute:#A5B2C5;
+  --line:#29384D;
+  --chip:#1B2A40;
+  --hi:#1B3547;
+  --win:#14352F;
+  --winink:#B5F2D7;
+  --sh:0 14px 34px rgba(0,0,0,.24),0 1px 0 rgba(255,255,255,.025) inset;
+  --c1:#4C7DFA;--c2:#22B987;--c3:#EA9C45;--c4:#8E74EF;
+  scroll-behavior:smooth;
+}
+body.admin{
+  --page:#070C15;
+  --frame:#0B1421;
+  --bg:#0B1421;
+  --card:#121D2C;
+  --soft:#0D1725;
+  --line:#253449;
+  --chip:#17263A;
+  --hi:#193344;
+  --sh:0 12px 30px rgba(0,0,0,.2);
+}
+body{background:radial-gradient(ellipse at 50% -25%,rgba(49,91,157,.16),transparent 62%),var(--page);color:var(--ink);line-height:1.55}
+h1{letter-spacing:-.035em}
+h2{font-size:1.25rem;letter-spacing:-.025em;margin:28px 0 13px}
+a{color:#8CB4FF}
+#shell{border-color:rgba(133,166,214,.16);box-shadow:0 28px 90px rgba(0,0,0,.42)}
+.side{background:linear-gradient(180deg,#111E30 0%,#0D1725 60%,#0B1421 100%);border-color:rgba(133,166,214,.16)}
+body.admin .side{background:linear-gradient(180deg,#0D1928,#0A1320);border-color:rgba(133,166,214,.13)}
+.brand{padding:8px 7px 16px;border-bottom:1px solid rgba(157,183,220,.12);margin-bottom:8px}
+.logo{border-color:rgba(119,161,235,.32);background:linear-gradient(145deg,rgba(76,125,250,.22),rgba(102,86,232,.16));box-shadow:0 6px 18px rgba(23,55,108,.25)}
+.brand .bt b{letter-spacing:-.02em}
+.brand .bt small{color:#9EADC3}
+.ctab{min-height:46px;border:1px solid rgba(146,177,255,.32);border-radius:13px;background:linear-gradient(105deg,#3975EE,#6756E7);box-shadow:0 8px 20px rgba(49,91,206,.25);transition:transform .18s,filter .18s,box-shadow .18s}
+.ctab:hover{filter:brightness(1.08);transform:translateY(-1px);box-shadow:0 11px 24px rgba(49,91,206,.32)}
+.menu{gap:4px;padding:3px 0}
+.menu .mh{color:#92A4BE;font-size:.66rem;letter-spacing:.13em;padding-top:15px}
+.menu button,.sidefoot button{position:relative;min-height:43px;padding:8px 12px;border:1px solid transparent;color:#B4C2D6;transition:background .18s,border-color .18s,color .18s,transform .18s}
+.menu button:hover,.sidefoot button:hover{background:rgba(137,169,218,.09);border-color:rgba(137,169,218,.1);color:#F0F5FF}
+.menu button.on,body.admin .menu button.on{background:linear-gradient(100deg,rgba(76,125,250,.2),rgba(102,86,232,.12));border-color:rgba(106,151,247,.27);box-shadow:inset 3px 0 #5F9CFF,0 5px 16px rgba(4,11,23,.15);color:#F1F5FF}
+.menu button.on .ms,body.admin .menu button.on .ms{color:#C0D0E7}
+.menu .bd{background:#3169D5;color:#fff;padding:2px 8px}
+.sidefoot{border-color:rgba(157,183,220,.14)}
+.content{background:linear-gradient(180deg,rgba(18,30,48,.4),transparent 260px),var(--frame)}
+.topbar,body.admin .topbar{background:rgba(16,27,43,.92);border-color:rgba(145,173,214,.15);backdrop-filter:blur(18px)}
+.tt h1{font-size:clamp(1.28rem,3vw,1.65rem)}
+.sub,body.admin .sub{color:#A5B4C9}
+.burger{border-color:rgba(141,173,220,.24);background:#19283D;border-radius:13px}
+.topr .uchip{border-color:rgba(141,173,220,.2);background:#17253A}
+.topr .orgc{border-color:rgba(141,173,220,.22);background:#17253A}
+main{max-width:1280px;padding-top:24px;padding-bottom:72px}
+label{color:#B7C4D8;font-weight:650}
+button{transition:background .18s,border-color .18s,color .18s,box-shadow .18s,transform .16s,filter .18s}
+button:hover{border-color:#405879}
+button:active{transform:translateY(1px) scale(.99)}
+button:disabled:hover{transform:none;filter:none}
+button.pri,.pri{border-color:rgba(149,177,255,.32);background:linear-gradient(105deg,#3975EE,#6756E7);color:#fff;box-shadow:0 7px 18px rgba(41,79,181,.2)}
+button.pri:hover,.pri:hover{filter:brightness(1.08);box-shadow:0 9px 22px rgba(41,79,181,.28)}
+input,select,textarea{border-color:#304158;background:#101A2A;color:var(--ink);transition:border-color .18s,box-shadow .18s,background .18s}
+input::placeholder,textarea::placeholder{color:#8293AB;opacity:1}
+input:hover,select:hover,textarea:hover{border-color:#455D7D}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid #78A5FF;outline-offset:2px;box-shadow:0 0 0 4px rgba(76,125,250,.16)}
+a.btn{border-color:#344964;background:#17263B;transition:background .18s,border-color .18s,transform .18s}
+a.btn:hover{background:#1D304A;border-color:#4B668B;transform:translateY(-1px)}
+.tabs{gap:5px;padding:4px;border:1px solid rgba(144,171,211,.16);border-bottom:1px solid rgba(144,171,211,.16);border-radius:14px;background:rgba(12,21,34,.74);scrollbar-width:thin}
+.tabs button,.tabs button:hover{margin:0;border:0;border-radius:10px;background:transparent;padding:10px 15px;color:#A7B5C9}
+.tabs button:hover{background:rgba(126,160,213,.1);color:#EEF3FC}
+.tabs button.on,body.admin .tabs button.on{background:linear-gradient(100deg,rgba(76,125,250,.24),rgba(102,86,232,.17));color:#F0F5FF;box-shadow:inset 0 0 0 1px rgba(116,156,236,.18)}
+.tp button.on{background:linear-gradient(105deg,#3975EE,#6756E7);border-color:#6189F0;color:#fff}
+.flt{gap:10px;padding:14px;background:rgba(19,31,49,.82);border-color:rgba(141,170,211,.17);border-radius:18px;box-shadow:var(--sh)}
+.rs,.panel{padding:20px;border-color:rgba(145,173,214,.16);border-radius:19px;background:linear-gradient(145deg,rgba(25,39,60,.92),rgba(18,29,45,.96));box-shadow:var(--sh)}
+.rs h2{font-size:1.08rem;letter-spacing:-.02em}
+.hint,.empty{color:#A5B3C7}
+.banner{border-color:rgba(130,174,255,.26);border-radius:24px;padding:clamp(24px,4vw,38px);background:radial-gradient(ellipse at 82% 20%,rgba(68,134,227,.3),transparent 38%),linear-gradient(118deg,#132743 0%,#182B4B 48%,#25255B 100%);box-shadow:0 20px 48px rgba(4,12,27,.28)}
+.banner::after{opacity:.12}
+.banner h2{font-size:clamp(1.65rem,4vw,2.5rem);letter-spacing:-.04em}
+.banner p{color:#C0CFE4;max-width:58ch}
+.hero2,.hero2.team{border-color:rgba(131,169,232,.22);background:radial-gradient(ellipse at 90% 0,rgba(76,125,250,.17),transparent 45%),linear-gradient(115deg,#14243A,#19253B);box-shadow:var(--sh)}
+.hero2 p,.hero2.team p{color:#AEBED3}
+.champ{border-color:rgba(93,203,161,.26);background:radial-gradient(ellipse at 50% 0,rgba(34,185,135,.16),transparent 66%),linear-gradient(120deg,#132D2B,#14253A);box-shadow:var(--sh)}
+.grid{gap:16px}
+.tc,.edc,.er,.qa,.kpi{border-color:rgba(145,173,214,.16);border-radius:18px;background:linear-gradient(145deg,#18263A,#141F30);box-shadow:var(--sh);transition:transform .18s,border-color .18s,background .18s,box-shadow .18s}
+.tc{border-top:3px solid #4C7DFA}
+.tc:hover,.edc:hover,.er:hover,.qa:hover,button.kpi:hover{transform:translateY(-2px);border-color:rgba(111,159,248,.4);background:linear-gradient(145deg,#1B2C45,#17253A);box-shadow:0 18px 38px rgba(0,0,0,.28)}
+.kpi{position:relative;overflow:hidden;padding:20px}
+.kpi::before{content:"";position:absolute;top:0;left:18px;right:18px;height:2px;background:linear-gradient(90deg,#4C7DFA,#38C5B2);opacity:.85}
+.kpi .kh{color:#B4C2D5}
+.kpi b{color:#F0F5FF}
+.chip,.er .eic{border-color:rgba(119,159,224,.22);background:linear-gradient(145deg,#213754,#1A2A40);color:#AFC9F5}
+.pl{border-color:rgba(145,173,214,.14)}
+.pl .pn small,.chips small{background:#21334B;color:#DCE8FA}
+.chips li{border-color:#344964;background:#142237}
+.tag{border-color:rgba(141,169,211,.2);background:#1A2A40;color:#CED9EA}
+.tag.ok{border-color:rgba(34,185,135,.28);background:rgba(34,185,135,.14);color:#9CEBCB}
+.tag.live{border-color:rgba(232,83,106,.34);background:rgba(232,83,106,.16);color:#FFB7C2}
+.tag.acc{border-color:rgba(76,125,250,.3);background:rgba(76,125,250,.14);color:#B9D0FF}
+.mrow,.match{border-color:rgba(145,173,214,.17);border-radius:18px;background:linear-gradient(145deg,#18263A,#141F30);box-shadow:var(--sh)}
+.team{border-color:rgba(145,173,214,.12)}
+.team.w{background:linear-gradient(90deg,rgba(34,185,135,.17),rgba(34,185,135,.05));color:#C5F4DE}
+.team.l .nm{color:#8E9CB1}
+.team.bye,.team.wait{color:#9EADC2}
+.sc,.sw{border-color:#354B68;background:#0F1A2B;color:#F0F5FF}
+.dt{background:#101A2A;border-top:1px solid rgba(145,173,214,.12)}
+.dt input{color:#C2CEE0}
+.est{border-color:rgba(145,173,214,.13);background:#111D2E;color:#B5C4D9}
+.e-en-curso{background:rgba(76,125,250,.16);color:#B9D0FF}
+.e-finalizado{background:rgba(34,185,135,.12);color:#A8E8CC}
+.e-aplazado{background:rgba(231,169,71,.12);color:#F4D28F}
+.e-cancelado{background:rgba(232,83,106,.12);color:#F4A9B4}
+button.lv{border-color:rgba(145,173,214,.14);background:#111D2E}
+button.lv.on{background:linear-gradient(100deg,#DA3D5C,#EF6075);color:#fff}
+.gm{border-color:rgba(145,173,214,.13)}
+.upc{scrollbar-width:thin;scrollbar-color:#405775 transparent}
+.uc{border-color:rgba(145,173,214,.18);background:radial-gradient(ellipse at 88% 0,rgba(76,125,250,.16),transparent 46%),linear-gradient(145deg,#182A43,#151F30);box-shadow:var(--sh)}
+.uc:hover{background:radial-gradient(ellipse at 88% 0,rgba(76,125,250,.22),transparent 46%),linear-gradient(145deg,#1D314D,#18263A)}
+.uc .tg{background:#316AD7;color:#fff}
+.uc .tg2{background:rgba(255,255,255,.09);color:#D4E1F5}
+.sb{border-color:rgba(105,214,187,.25);background:radial-gradient(ellipse at 50% 0,rgba(34,185,135,.14),transparent 55%),linear-gradient(145deg,#122B2C,#142137);box-shadow:var(--sh)}
+.sb .st,.sb th{color:#A7E8D0}
+.clk{color:#F1F8FF}
+table{border-color:rgba(145,173,214,.18);border-radius:18px;background:#141F30}
+th{background:#1A2B43;color:#D9E6F8;font-size:.76rem;letter-spacing:.045em;text-transform:uppercase}
+body.admin th{background:#17283F}
+td{border-color:rgba(145,173,214,.12)}
+tr.top td{background:rgba(76,125,250,.12)}
+.stb tr.hc th{background:linear-gradient(100deg,#1C3452,#202F4C)}
+.cal{border-color:rgba(145,173,214,.18);border-radius:17px;background:#141F30}
+.cal h2{background:#1A2B43;color:#E6EEF9}
+.cal b,.nu{border-color:#354A65;background:#1A2A40;color:#DCE8F8}
+.toast{border-color:rgba(142,174,224,.25);background:rgba(20,33,52,.96);backdrop-filter:blur(14px);box-shadow:0 14px 38px rgba(0,0,0,.38)}
+::selection{background:rgba(76,125,250,.38);color:#fff}
+@media(min-width:960px){
+  #shell{border-radius:28px}
+  .side{border-radius:28px 0 0 28px}
+  .content{border-radius:0 28px 28px 0}
+  .topbar{padding-left:34px;padding-right:34px}
+  main{padding-top:30px;padding-left:36px;padding-right:36px}
+}
+@media(max-width:959px){
+  #shell{min-height:100vh;min-height:100dvh}
+  .side{width:min(86vw,330px);background:linear-gradient(180deg,#111E30,#0D1725)}
+  .topbar,body.admin .topbar{box-shadow:0 8px 24px rgba(0,0,0,.16)}
+  main{padding:18px 16px calc(44px + env(safe-area-inset-bottom,0px))}
+  h2{font-size:1.3rem}
+}
+@media(max-width:600px){
+  .topbar{gap:9px;padding:10px 12px}
+  .burger{width:40px;height:40px}
+  .topr{gap:6px}
+  main{padding-left:12px;padding-right:12px}
+  .rs,.panel{padding:16px;border-radius:17px}
+  .banner{padding:23px 20px;border-radius:20px}
+  .hero2,.hero2.team{padding:18px;border-radius:18px}
+  .hero2 .hs{gap:15px}
+  .mrow{padding:13px;border-radius:16px}
+  .match{border-radius:16px}
+  .tabs{margin-bottom:14px}
+  .tabs button,.tabs button:hover{padding:9px 12px;font-size:.88rem}
+  .flt{padding:11px;border-radius:16px}
+}
+@media(prefers-reduced-motion:reduce){:root{scroll-behavior:auto}button,.ctab,.tc,.edc,.er,.qa,.kpi,a.btn{transition:none!important}}
 /* ---------- Acceso obligatorio: login, crear cuenta, espera y miembros ---------- */
 body.gating #shell,body.gating .toast:not([role]){display:none}
 .gate{position:fixed;inset:0;z-index:1000;display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:max(24px,6vh) 16px 40px;background:radial-gradient(1200px 600px at 50% -10%,#232936 0%,var(--page) 60%);color:var(--ink);font-family:Inter,system-ui,sans-serif}
@@ -564,6 +739,222 @@ body.gating #shell,body.gating .toast:not([role]){display:none}
 .gpri:disabled::before{content:"";display:inline-block;width:14px;height:14px;margin-right:9px;vertical-align:-2px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:gSpin .7s linear infinite}
 @keyframes gSpin{to{transform:rotate(360deg)}}
 .glink:hover{color:var(--ink)}
+
+/* ---------- acceso Torvex: escena deportiva y formulario adaptable ---------- */
+.gate{
+  align-items:center;
+  padding:clamp(18px,5vh,52px) 20px;
+  isolation:isolate;
+  background:
+    radial-gradient(ellipse at 14% 12%,rgba(60,115,199,.2),transparent 34%),
+    radial-gradient(ellipse at 86% 88%,rgba(81,72,173,.2),transparent 37%),
+    linear-gradient(145deg,#0d1421 0%,#101827 48%,#111525 100%);
+}
+.gate::before,.gate::after{width:42vmax;height:42vmax;filter:blur(110px);opacity:.2}
+.gate::before{background:#3478b9;left:-22vmax;top:-18vmax}
+.gate::after{background:#6250bd;right:-20vmax;bottom:-22vmax}
+.gbox{
+  position:relative;
+  display:grid;
+  grid-template-columns:minmax(0,.94fr) minmax(0,1.06fr);
+  width:min(100%,1000px);
+  max-width:1000px;
+  min-height:590px;
+  padding:0;
+  overflow:hidden;
+  border:1px solid rgba(190,211,244,.19);
+  border-radius:28px;
+  background:linear-gradient(145deg,rgba(27,37,55,.97),rgba(18,25,39,.98));
+  box-shadow:0 36px 100px rgba(0,0,0,.48),0 2px 0 rgba(255,255,255,.035) inset;
+  animation:gin .48s cubic-bezier(.2,.8,.2,1) both;
+}
+.gbox::before{content:"";position:absolute;z-index:2;top:0;left:12%;right:12%;height:1px;background:linear-gradient(90deg,transparent,rgba(151,207,255,.7),rgba(194,163,255,.68),transparent);pointer-events:none}
+.gauth-visual{
+  position:relative;
+  display:flex;
+  min-width:0;
+  flex-direction:column;
+  justify-content:space-between;
+  padding:34px 34px 25px;
+  overflow:hidden;
+  border-right:1px solid rgba(190,211,244,.12);
+  background:
+    radial-gradient(ellipse at 72% 40%,rgba(57,165,172,.2),transparent 45%),
+    linear-gradient(155deg,#1b3950 0%,#202f4a 52%,#29294b 100%);
+}
+.gauth-visual::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(220,240,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(220,240,255,.035) 1px,transparent 1px);background-size:34px 34px;mask-image:linear-gradient(180deg,rgba(0,0,0,.6),transparent 82%);pointer-events:none}
+.gauth-visual::after{content:"";position:absolute;width:270px;height:270px;right:-100px;top:92px;border:1px solid rgba(204,238,255,.13);border-radius:50%;box-shadow:0 0 0 24px rgba(204,238,255,.025),0 0 0 50px rgba(204,238,255,.02);pointer-events:none}
+.gauth-kicker{position:relative;z-index:2;display:flex;align-items:center;gap:9px;color:#dce9f7;font-size:10px;font-weight:800;letter-spacing:1.55px}
+.gauth-kicker i{width:8px;height:8px;border-radius:50%;background:#7ce2c1;box-shadow:0 0 16px rgba(124,226,193,.8)}
+.gauth-kicker span{color:rgba(220,233,247,.46)}
+.gauth-scene{position:relative;z-index:1;display:grid;flex:1;min-height:265px;place-items:center;margin:10px -26px 0}
+.gauth-art{display:block;width:112%;max-width:none;overflow:visible;filter:drop-shadow(0 22px 26px rgba(4,12,26,.28))}
+.gstadium{stroke-dasharray:620;stroke-dashoffset:620;animation:gStadium 1.5s .2s ease-out forwards}
+@keyframes gStadium{to{stroke-dashoffset:0}}
+.gfield{transform-box:fill-box;transform-origin:center bottom;animation:gFieldRise .75s .28s cubic-bezier(.2,.9,.3,1.15) both}
+@keyframes gFieldRise{from{opacity:0;transform:translateY(16px) scaleY(.65)}to{opacity:.82;transform:none}}
+.gball{transform-box:fill-box;transform-origin:center;animation:gBallFloat 3.4s ease-in-out infinite}
+@keyframes gBallFloat{0%,100%{transform:translate(0,0) rotate(-7deg)}50%{transform:translate(-3px,-9px) rotate(7deg)}}
+.gorb{animation:gOrb 2.8s ease-in-out infinite alternate}
+.gorb.orb-b{animation-delay:.6s}.gorb.orb-c{animation-delay:1.1s}
+@keyframes gOrb{from{opacity:.35;transform:scale(.8)}to{opacity:1;transform:scale(1.25)}}
+.gauth-orbit{position:absolute;width:10px;height:10px;border:1px solid rgba(188,231,255,.65);border-radius:50%;box-shadow:0 0 18px rgba(133,211,255,.38);animation:gOrbit 8s linear infinite}
+.orbit-one{top:17%;left:21%}.orbit-two{right:17%;bottom:22%;width:6px;height:6px;animation-duration:11s;animation-direction:reverse}
+@keyframes gOrbit{to{transform:rotate(360deg) translateX(16px) rotate(-360deg)}}
+.gauth-tagline{position:relative;z-index:2;display:flex;flex-direction:column;gap:8px;padding:0 2px 15px}
+.gauth-tagline small{color:#9bc8d4;font-size:9px;font-weight:800;letter-spacing:1.75px}
+.gauth-tagline strong{color:#f3f7ff;font-size:clamp(30px,3.6vw,43px);line-height:.99;letter-spacing:-1.7px}
+.gauth-tagline span{color:#c2cde0;font-size:13px}
+.gauth-foot{position:relative;z-index:2;display:flex;align-items:center;gap:8px;color:#b6c6dc;font-size:8px;font-weight:800;letter-spacing:1px;white-space:nowrap}
+.gauth-foot i{width:3px;height:3px;border-radius:50%;background:#7ce2c1}
+.gauth-foot-mark{display:grid;place-items:center;width:20px;height:20px;border:1px solid rgba(200,226,255,.25);border-radius:7px;color:#8ee3c6;font-size:12px}
+.gauth-content{display:flex;min-width:0;flex-direction:column;justify-content:center;padding:clamp(30px,5vw,58px);}
+.gauth-content>.gbrand{margin-bottom:30px}
+.glogo{width:48px;height:48px;border:1px solid rgba(172,197,238,.18);border-radius:15px;background:linear-gradient(145deg,rgba(89,136,203,.25),rgba(122,90,194,.2));box-shadow:0 8px 24px rgba(32,87,150,.18);font-size:25px}
+.gbrand b{color:#f1f5fc;font-size:17px;letter-spacing:.05px}
+.gbrand small{margin-top:2px;color:#9baac0;font-size:12px}
+.gauth-content>.gbody{width:100%;max-width:430px;margin:0 auto}
+.gtabs{gap:3px;margin-bottom:25px;padding:4px;border:1px solid rgba(180,202,235,.11);border-radius:14px;background:rgba(7,13,24,.38)}
+.gtabs::before{background:linear-gradient(115deg,#407ee1,#6f63e8);box-shadow:0 5px 15px rgba(65,105,218,.28)}
+.gtabs button{min-height:39px;color:#9baac0;font-size:12px;font-weight:700}
+.gtabs button.on{color:#fff}
+.gh{margin:0 0 6px;color:#f3f6fd;font-size:25px;line-height:1.15;letter-spacing:-.8px}
+.gsub{margin:0 0 21px;color:#9caac0;font-size:13px;line-height:1.55}
+.gbox label{margin:17px 0 7px;color:#c1cde0;font-size:11.5px;font-weight:700;letter-spacing:.15px}
+.gin{min-height:49px;padding:12px 14px;border-color:rgba(169,190,222,.15);border-radius:13px;background:rgba(8,15,27,.48);color:#f1f5fc;font-size:13px;box-shadow:0 1px 0 rgba(255,255,255,.025) inset}
+.gin::placeholder{color:#68788e}
+.gin:hover{border-color:rgba(150,185,232,.35)}
+.gin:focus{border-color:#78a9f6;box-shadow:0 0 0 4px rgba(89,143,226,.14),0 0 22px rgba(67,126,222,.08)}
+.geye{right:5px;color:#8697b0}
+.geye:hover{background:rgba(133,169,222,.1);color:#e9f2ff}
+.gbox label.grem{margin-top:16px;color:#9eacc0;font-size:11.5px}
+.grem input{border-color:rgba(169,190,222,.2);background:rgba(8,15,27,.48)}
+.gpri{min-height:50px;margin-top:22px;border:1px solid rgba(188,211,255,.18);border-radius:14px;background:linear-gradient(105deg,#397fe6 0%,#526fe6 50%,#765be5 100%);box-shadow:0 10px 26px rgba(56,97,205,.24);font-size:13px;letter-spacing:.15px}
+.gpri:hover{filter:brightness(1.1);box-shadow:0 13px 30px rgba(56,97,205,.35);transform:translateY(-1px)}
+.gpri:focus-visible,.gtabs button:focus-visible,.geye:focus-visible,.glink:focus-visible,.gorg:focus-visible,.gddb:focus-visible,.gddl button:focus-visible{outline:2px solid #99c2ff;outline-offset:3px}
+.glink{margin-top:20px;color:#9daec7;font-size:11.5px;text-decoration:none}
+.glink:hover{color:#e6edfa}
+.gerr{padding:11px 13px;border-color:rgba(245,125,135,.25);border-radius:12px;background:rgba(145,49,70,.14);color:#ffbfc4;font-size:12px}
+.gsec{margin-top:23px;color:#9caac0}
+.gsec span{background:linear-gradient(145deg,#4388e8,#765be5);box-shadow:0 4px 12px rgba(75,104,218,.25)}
+.gorg{border-color:rgba(169,190,222,.14);border-radius:14px;background:rgba(8,15,27,.36)}
+.gorg.on{border-color:rgba(116,163,242,.48);background:rgba(56,98,171,.12)}
+.gdd .gddb,.gddl{border-color:rgba(169,190,222,.15);border-radius:13px;background:rgba(8,15,27,.44);color:#e7edf8}
+.gdd.open .gddl{border-color:rgba(169,190,222,.15);background:#172237}
+.gddl .gnew{background:linear-gradient(105deg,#397fe6,#765be5)}
+.gsch{border-color:rgba(180,210,245,.18);box-shadow:0 16px 36px rgba(3,10,21,.24)}
+.gmeter i{height:5px}
+.gpinfo{gap:7px 9px;margin-top:10px}
+.gwait{color:#eaf1fc}
+.gwait p,.gwait .glink{color:#a9b8ce}
+.gpulse{border-color:rgba(169,190,222,.25)}
+.gpulse i{background:#8fe3ca;box-shadow:0 0 22px rgba(143,227,202,.65)}
+
+@media(max-width:760px){
+  .gate{align-items:flex-start;padding:clamp(10px,2vh,18px) 14px calc(10px + env(safe-area-inset-bottom,0px));}
+  .gbox{grid-template-columns:minmax(0,1fr);width:min(100%,470px);min-height:0;border-radius:25px}
+  .gauth-visual{height:146px;min-height:146px;padding:16px 21px 14px;border-right:0;border-bottom:1px solid rgba(190,211,244,.12)}
+  .gauth-visual::after{width:180px;height:180px;right:-55px;top:38px;box-shadow:0 0 0 16px rgba(204,238,255,.025),0 0 0 34px rgba(204,238,255,.02)}
+  .gauth-kicker{gap:7px;font-size:8px;letter-spacing:1.25px}
+  .gauth-scene{position:absolute;right:-28px;bottom:-39px;width:59%;height:154px;min-height:0;margin:0;opacity:.9}
+  .gauth-art{width:145%;max-width:none}
+  .gauth-tagline{z-index:2;width:60%;gap:5px;margin-top:auto;padding:0}
+  .gauth-tagline small{font-size:7px;letter-spacing:1.2px}
+  .gauth-tagline strong{font-size:26px;letter-spacing:-1px}
+  .gauth-tagline span{font-size:10px}
+  .gauth-foot{position:absolute;right:16px;bottom:12px;gap:5px;font-size:6px;letter-spacing:.55px}
+  .gauth-foot-mark{width:17px;height:17px}
+  .gauth-content{padding:16px clamp(20px,6vw,32px) 18px}
+  .gauth-content>.gbrand{margin-bottom:14px}
+  .glogo{width:42px;height:42px;border-radius:13px;font-size:22px}
+  .gtabs{margin-bottom:16px}
+  .gsub{margin-bottom:11px}
+  .gbox label{margin-top:10px}
+  .gpri{margin-top:15px}
+  .glink{margin-top:14px}
+}
+@media(max-width:420px){
+  .gate{padding-left:10px;padding-right:10px}
+  .gbox{border-radius:22px}
+  .gauth-visual{height:138px;min-height:138px;padding:14px 18px 12px}
+  .gauth-scene{right:-38px;bottom:-43px;width:62%;height:142px}
+  .gauth-tagline{width:64%}
+  .gauth-tagline strong{font-size:24px}
+  .gauth-foot{display:none}
+  .gauth-content{padding:15px 19px 16px}
+}
+@media(max-height:680px) and (min-width:761px){.gate{align-items:flex-start}.gbox{min-height:550px}.gauth-content{padding-top:34px;padding-bottom:34px}}
+
+/* ---------- detalles finales de interacción y lectura ---------- */
+.gbox{backdrop-filter:blur(18px);transition:border-color .25s ease,box-shadow .25s ease}
+.glogo{position:relative;isolation:isolate}
+.glogo::after{content:"";position:absolute;inset:-5px;border:1px solid rgba(151,194,255,.12);border-radius:18px;z-index:-1;animation:gLogoRing 4s ease-in-out infinite}
+@keyframes gLogoRing{0%,100%{transform:scale(.96);opacity:.4}50%{transform:scale(1.04);opacity:1}}
+.gtabs[data-m="login"]+.gbody .gh::before,.gtabs[data-m="crear"]+.gbody .gh::before{display:block;margin-bottom:9px;font-size:9px;line-height:1.2;font-weight:800;letter-spacing:1.5px}
+.gtabs[data-m="login"]+.gbody .gh::before{content:"VUELVE A LA CANCHA";color:#87d9c1}
+.gtabs[data-m="crear"]+.gbody .gh::before{content:"FORMA PARTE DE LA LIGA";color:#aab8ff}
+.gin#g_email{
+  padding-left:42px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23899bb5' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='5' width='18' height='14' rx='3'/%3E%3Cpath d='m4 7 8 6 8-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:14px center;
+}
+.gin#g_pass,.gin#g_pass2,.gin#g_cclave{
+  padding-left:42px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23899bb5' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='4' y='10' width='16' height='11' rx='3'/%3E%3Cpath d='M8 10V7a4 4 0 0 1 8 0v3'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:14px center;
+}
+.gin:-webkit-autofill,.gin:-webkit-autofill:hover,.gin:-webkit-autofill:focus{-webkit-text-fill-color:#f1f5fc;caret-color:#f1f5fc;-webkit-box-shadow:0 0 0 1000px #101a2a inset;transition:background-color 99999s ease-in-out 0s}
+.gpri:focus-visible{box-shadow:0 0 0 4px rgba(108,157,248,.2),0 10px 26px rgba(56,97,205,.24)}
+.gerr::before{content:"!";display:inline-grid;place-items:center;width:17px;height:17px;margin-right:7px;border:1px solid rgba(255,191,196,.46);border-radius:50%;font-size:11px;font-weight:800;vertical-align:-2px}
+.ggoogle{width:100%;min-height:48px;display:flex;align-items:center;justify-content:center;gap:11px;margin:14px 0 0;padding:10px 14px;border:1px solid rgba(190,207,235,.18);border-radius:13px;background:rgba(255,255,255,.055);color:#edf3ff;font:700 13px Inter,sans-serif;cursor:pointer;transition:background .2s,border-color .2s,transform .15s,box-shadow .2s}
+.ggoogle svg{width:19px;height:19px;flex:none}
+.ggoogle:hover{background:rgba(255,255,255,.1);border-color:rgba(190,207,235,.34);transform:translateY(-1px);box-shadow:0 8px 20px rgba(0,0,0,.16)}
+.ggoogle:active{transform:scale(.99)}
+.ggoogle:disabled{opacity:.65;cursor:wait}
+.ggoogle:focus-visible{outline:2px solid #99c2ff;outline-offset:3px}
+.gdivider{display:flex;align-items:center;gap:12px;margin:14px 0;color:#8392a9;font-size:10px;font-weight:700;letter-spacing:.55px;text-transform:uppercase}
+.gdivider::before,.gdivider::after{content:"";height:1px;flex:1;background:rgba(180,202,235,.13)}
+.gmeter i{position:relative;overflow:hidden}
+.gmeter[data-s="1"] i:nth-child(1),.gmeter[data-s="2"] i:nth-child(-n+2),.gmeter[data-s="3"] i:nth-child(-n+3),.gmeter[data-s="4"] i{box-shadow:0 0 10px currentColor}
+.gmatch.ok{color:#95e4bd}.gmatch.no{color:#ffadb4}
+.gsch-sign{box-shadow:0 10px 25px rgba(0,0,0,.18)}
+.gddl button{min-height:42px}
+.gorg:focus-visible,.gddb:focus-visible,.gddl button:focus-visible{border-color:#94baff}
+@media(hover:hover){.gbox:hover{border-color:rgba(190,211,244,.27);box-shadow:0 40px 110px rgba(0,0,0,.5),0 2px 0 rgba(255,255,255,.045) inset}.gauth-content .glink:hover{transform:translateY(-1px)}}
+@media(max-width:760px){.gauth-content>.gbrand{margin-bottom:12px}.gtabs[data-m="login"]+.gbody .gh::before,.gtabs[data-m="crear"]+.gbody .gh::before{margin-bottom:7px}.gin#g_email,.gin#g_pass,.gin#g_pass2,.gin#g_cclave{background-position:12px center;padding-left:38px}}
+@media(prefers-reduced-motion:reduce){.glogo::after,.gstadium,.gfield,.gball,.gorb,.gauth-orbit{animation:none!important}}
+
+/* El selector del colegio ocupa el letrero bajo la ilustración. */
+.gsch .gsch-dd{position:relative;z-index:3;margin:10px 10px 0}
+.gsch .gsch-picker{display:grid;grid-template-columns:minmax(0,1fr) 32px;grid-template-rows:auto auto;gap:3px 10px;min-height:58px;padding:9px 12px;border:1px solid rgba(210,228,250,.27);border-radius:12px;background:rgba(8,15,27,.56);color:#eff4fc;text-align:left;box-shadow:0 8px 22px rgba(4,10,20,.2);transition:border-color .2s,background .2s,box-shadow .2s}
+.gsch .gsch-picker:hover,.gsch .gdd.open .gsch-picker{border-color:rgba(128,179,249,.7);background:rgba(14,25,43,.9);box-shadow:0 0 0 3px rgba(89,143,226,.1),0 10px 24px rgba(4,10,20,.25)}
+.gsch-pick-label{grid-column:1;grid-row:1;color:#9db0c9;font-size:9px;font-weight:800;letter-spacing:1.1px;text-transform:uppercase}
+.gsch-sign-text{grid-column:1;grid-row:2;display:block;min-width:0;min-height:18px;overflow:hidden;color:#f2f5fc;font-size:13px;font-weight:700;line-height:1.35;text-overflow:ellipsis;white-space:nowrap}
+.gsch-sign-text.long{font-size:11px}
+.gsch-sign-text.empty{color:#aab7ca;font-style:normal;font-weight:600}
+.gsch-sign-text span{display:inline-block;white-space:pre}
+.gsch-sign-text span.st{animation:gsLetter .5s cubic-bezier(.2,.9,.3,1.3) both;animation-delay:var(--d,0ms)}
+.gsch-sign-text span.pop{animation:gsPop .32s cubic-bezier(.3,1.7,.5,1) both}
+.gsch-sign-text.edit:not(.empty)::after{content:"";display:inline-block;width:2px;height:1em;margin-left:3px;vertical-align:-2px;background:#a9caff;animation:gsCaret 1s steps(1) infinite}
+.gsch-picker i{grid-column:2;grid-row:1/3;display:grid;place-items:center;width:30px;height:30px;border:1px solid rgba(210,228,250,.14);border-radius:9px;background:rgba(255,255,255,.045);color:#b9c9df;font-size:15px;font-style:normal;transition:transform .25s,color .2s,background .2s}
+.gsch .gdd.open .gsch-picker i{color:#fff;background:rgba(93,142,216,.2)}
+.gsch .gddl{margin-top:7px;border-color:rgba(210,228,250,.16);background:#172237}
+.gsch .gddl button{min-height:42px}
+.gsch .gddl .gnew{background:linear-gradient(105deg,#397fe6,#765be5)}
+.gsch .gempty{color:#aab7ca}
+.gsch .gsch-dd.open .gddl{max-height:220px}
+@media(max-width:760px){.gsch .gsch-dd{margin:8px 10px 0}.gsch .gsch-picker{min-height:54px;padding:8px 11px}.gsch .gsch-sign-text{font-size:12px}}
+@media(prefers-reduced-motion:reduce){.gsch-sign-text span.st,.gsch-sign-text span.pop,.gsch-sign-text.edit:not(.empty)::after{animation:none!important}}
+
+/* La lista flota bajo el letrero sin desplazar el formulario. */
+.gsch{overflow:visible}
+.gsch.picker-open{z-index:40}
+.gsch .gsch-dd{z-index:3}
+.gsch .gsch-dd.open .gddl{position:absolute;top:calc(100% + 7px);right:0;left:0;z-index:50;margin:0;overflow:auto;box-shadow:0 16px 36px rgba(2,8,18,.48)}
+.gsch .gddl button[aria-selected="true"]{display:flex;align-items:center;justify-content:space-between}
+.gsch .gddl button[aria-selected="true"]::after{content:"✓";margin-left:12px;color:#91e1c1;font-weight:800}
 </style>
 </head>
 <body>
@@ -970,11 +1361,22 @@ function liveAct(t,m,x,k,v){
   if(x=="undo"){
     var e=h.pop();if(!e){L.h=h;L.ev=ev;return}
     var nl=JSON.parse(typeof e=="string"?e:e.s);nl.h=h;
-    if(typeof e!="string"){if(e.a)ev.pop();if(e.r)ev.splice(e.ri,0,e.r)}
+    if(typeof e!="string"){if(e.a)ev.pop();if(e.r)ev.splice(e.ri,0,e.r);if(e.m&&e.mi>=0&&e.mi<ev.length)ev[e.mi]=e.m}
     nl.ev=ev;m.live=nl;sync(m);return;
   }
   function addEv(o){o.k=k;o.p=pl;o.lab=lab;o.ts=Date.now();ev.push(o);ent.a=1}
   function popEv(xs){for(var j=ev.length-1;j>=0;j--)if(ev[j].k==k&&xs.indexOf(ev[j].x)>=0){ent.r=ev.splice(j,1)[0];ent.ri=j;return}}
+  function minusBasketPoint(){
+    if(L.p[k]<=0)return;
+    L.p[k]--;
+    for(var j=ev.length-1;j>=0;j--){
+      if(ev[j].k!=k||ev[j].x!="pt")continue;
+      var points=ev[j].v||1;
+      if(points>1){ent.m=JSON.parse(JSON.stringify(ev[j]));ent.mi=j;ev[j].v=points-1}
+      else popEv(["pt"]);
+      return;
+    }
+  }
   if(x=="yc"||x=="rc")addEv({x:x});
   else if(L.k=="beis"){
     if(x=="run"||x=="unrun"){var ar=L.r[k];while(ar.length<=L.inn)ar.push(0);ar[L.inn]=Math.max(0,ar[L.inn]+(x=="run"?1:-1));if(x=="run")addEv({x:"run",v:1});else popEv(["run"])}
@@ -991,7 +1393,7 @@ function liveAct(t,m,x,k,v){
       if(L.cur[i]>=tg&&L.cur[i]-L.cur[o]>=2){L.sets.push(L.cur.slice());L.w[k]++;L.cur=[0,0];if(L.w[k]>=NEED)L.over=true}}
     else if(x=="pm"){L.cur[i]=Math.max(0,L.cur[i]-1);popEv(["pt","ace","blk"])}
   }else{if(x=="pt"){L.p[k]+=1;addEv({x:"pt",v:1})}else if(x=="pm"){L.p[k]=Math.max(0,L.p[k]-1);popEv(["pt"])}}
-  if(ch){h.push({s:snap,a:ent.a,r:ent.r,ri:ent.ri});if(h.length>25)h.shift()}
+  if(ch){h.push({s:snap,a:ent.a,r:ent.r,ri:ent.ri,m:ent.m,mi:ent.mi});if(h.length>25)h.shift()}
   L.h=h;L.ev=ev;sync(m);
 }
 function finishLive(t,m){
@@ -1702,12 +2104,16 @@ var MEM=[],MEMERR="",APR=null,MEMT=null,WAITT=null,MYCODE="";
 async function rpc(n,a){var r=await SB.rpc(n,a||{});if(r.error)throw r.error;return r.data}
 function gerr(e){
   var m=String((e&&e.message)||e||""),c=e&&e.code;
+  if(c==="google_cancelled"||e&&e.cancelled)return"Cancelaste el acceso con Google.";
+  if(c==="google_timeout"||e&&e.timeout)return"El acceso con Google tardó demasiado. Inténtalo de nuevo.";
   if(c==="user_already_exists"||/already (been )?registered|already exists/i.test(m))return"Ese correo ya tiene una cuenta. Inicia sesión.";
   if(c==="invalid_credentials"||/invalid login/i.test(m))return"Correo o contraseña incorrectos.";
   if(c==="email_not_confirmed"||/not confirmed/i.test(m))return"Falta desactivar «Confirm email» en Supabase (Authentication, Providers, Email).";
   if(c==="weak_password"||/at least 6|weak password/i.test(m))return"La contraseña debe tener al menos 6 caracteres.";
   if(c==="over_request_rate_limit"||c==="over_email_send_rate_limit"||/rate limit|too many/i.test(m))return"Demasiados intentos. Espera un momento.";
   if(c==="email_address_invalid"||/email.*invalid|invalid.*email/i.test(m))return"Escribe un correo válido.";
+  if(/provider.*not enabled|unsupported provider|google.*not enabled/i.test(m))return"Google todavía no está activado en la configuración de Supabase.";
+  if(/redirect.*(not allowed|url)|redirect_uri/i.test(m))return"La dirección de regreso de Torvex no está permitida en Supabase.";
   if(/failed to fetch|network|load failed/i.test(m))return"No hay conexión con el servidor. Revisa tu internet.";
   return m||"Ocurrió un error. Inténtalo de nuevo.";
 }
@@ -1720,6 +2126,8 @@ function gateShow(on){document.body.classList.toggle("gating",!!on);var g=$("gat
 var GREM=false,GDIR="",GFOCUS="",PWL=["","Muy corta (mínimo 6)","Aceptable","Buena","Fuerte"];
 try{var gse=localStorage.getItem("torneo-email");if(gse){GF.email=gse;GREM=true}}catch(e){}
 var EYE='<svg class="eye-o" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="eye-c" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.9 10.9 0 0 1 12 19C5 19 1 12 1 12a18.5 18.5 0 0 1 5.06-5.94M9.9 4.24A9.1 9.1 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M1 1l22 22"/></svg>';
+var GICON='<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#4285F4" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.2v5.1h6.7c3.9-3.6 6-8.8 6-15Z"/><path fill="#34A853" d="M24 44c5.5 0 10.1-1.8 13.5-4.8l-6.7-5.1c-1.8 1.2-4 1.9-6.8 1.9-5.2 0-9.6-3.5-11.2-8.2H5.9v5.3A20 20 0 0 0 24 44Z"/><path fill="#FBBC05" d="M12.8 27.8a12 12 0 0 1 0-7.6v-5.3H5.9a20 20 0 0 0 0 18.2l6.9-5.3Z"/><path fill="#EA4335" d="M24 12c3 0 5.7 1 7.8 3.1l5.9-5.9C34.1 5.8 29.5 4 24 4A20 20 0 0 0 5.9 14.9l6.9 5.3C14.4 15.5 18.8 12 24 12Z"/></svg>';
+function gGoogleEntry(){return'<button type="button" class="ggoogle" data-ac="google"'+(GBUSY?' disabled':'')+'>'+GICON+'<span>'+(GBUSY?'Conectando con Google…':'Continuar con Google')+'</span></button><div class="gdivider"><span>o con tu correo</span></div>'}
 function gField(id,label,type,val,extra){
   var inp='<input class="gin" id="'+id+'" data-gf="'+id.slice(2)+'" type="'+type+'" value="'+esc(val||"")+'" '+(extra||"")+'>';
   if(type==="password")inp='<div class="gpw">'+inp+'<button type="button" class="geye" data-ac="ver" data-for="'+id+'" aria-label="Mostrar contraseña" title="Mostrar u ocultar">'+EYE+'</button></div><small class="gcaps" hidden>⇪ Bloq Mayús está activado</small>';
@@ -1735,7 +2143,8 @@ function pwUpdate(){
     else{q.textContent="No coinciden";q.className="gmatch no"}
   }
 }
-function gCard(inner){return'<div class="gbox"><div class="gbrand"><span class="glogo">🏆</span><div><b>Torneos escolares</b><small>Liga deportiva escolar</small></div></div>'+inner+'</div>'}
+function gVisual(){return'<aside class="gauth-visual" aria-hidden="true"><div class="gauth-kicker"><i></i> TORVEX <span>/</span> DEPORTE ESCOLAR</div><div class="gauth-scene"><svg class="gauth-art" viewBox="0 0 460 250" fill="none"><defs><linearGradient id="field" x1="60" y1="90" x2="400" y2="230" gradientUnits="userSpaceOnUse"><stop stop-color="#4CC9B0"/><stop offset="1" stop-color="#4184C7"/></linearGradient><radialGradient id="stadiumGlow"><stop stop-color="#90F0D2" stop-opacity=".62"/><stop offset="1" stop-color="#90F0D2" stop-opacity="0"/></radialGradient></defs><circle cx="310" cy="112" r="142" fill="url(#stadiumGlow)"/><path class="gstadium" d="M36 154c6-58 64-95 194-95s188 37 194 95" stroke="rgba(255,255,255,.18)" stroke-width="2"/><path d="M69 152c9-39 54-63 161-63s152 24 161 63" stroke="rgba(255,255,255,.24)" stroke-width="2"/><path d="M95 153c12-24 50-38 135-38s123 14 135 38" stroke="rgba(255,255,255,.22)" stroke-width="2"/><path d="M54 145 86 69M406 145l-32-76M89 111 121 60M371 111l-32-51" stroke="rgba(255,255,255,.14)" stroke-width="2"/><path class="gfield" d="M74 148c29-18 83-28 156-28s127 10 156 28l30 71c-42 17-104 26-186 26s-144-9-186-26l30-71Z" fill="url(#field)" fill-opacity=".82" stroke="rgba(225,255,248,.66)" stroke-width="2"/><path d="M230 122v123M74 148c35 19 90 29 156 29s121-10 156-29M44 219c42-17 104-26 186-26s144 9 186 26" stroke="rgba(235,255,250,.58)" stroke-width="1.5"/><ellipse cx="230" cy="177" rx="48" ry="18" stroke="rgba(235,255,250,.58)" stroke-width="1.5"/><circle cx="230" cy="177" r="3" fill="#F4FFF9"/><path d="M58 171h27v32H48v-21c0-6 4-11 10-11Zm317 0h27c6 0 10 5 10 11v21h-37v-32Z" stroke="rgba(235,255,250,.55)" stroke-width="1.5"/><circle class="gorb orb-a" cx="90" cy="63" r="4" fill="#A9F3D8"/><circle class="gorb orb-b" cx="370" cy="52" r="3" fill="#9AC7FF"/><circle class="gorb orb-c" cx="415" cy="113" r="2.5" fill="#F4D990"/><g class="gball"><circle cx="326" cy="151" r="25" fill="#FFF6E7"/><path d="m326 136 9 7-3 11h-12l-3-11 9-7Zm-10 7-9 2-4 9 8 3m28-12 8 2 4 9-8 3m-22 7-1 9 7 6 7-6-1-9" stroke="#53617C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g></svg><div class="gauth-orbit orbit-one"></div><div class="gauth-orbit orbit-two"></div></div><div class="gauth-tagline"><small>UNA TEMPORADA. MIL HISTORIAS.</small><strong>Tu liga.<br>Tu historia.</strong><span>Todo el juego escolar, en un solo lugar.</span></div><div class="gauth-foot"><span class="gauth-foot-mark">✦</span> BASEBALL5 <i></i> BASKET 3X3 <i></i> VOLEIBOL</div></aside>'}
+function gCard(inner){return'<div class="gbox">'+gVisual()+'<div class="gauth-content"><div class="gbrand"><span class="glogo">🏆</span><div><b>Torvex</b><small>Liga deportiva escolar</small></div></div>'+inner+'</div></div>'}
 /* ---------- colegio animado: aparece sin nombre y se va editando con lo que se escribe o elige ---------- */
 var SCHSEEN=false,SCHLAST="";
 function schName(){return GNEW?(GF.cnom||"").trim():(GCOL?GCOLN:"")}
@@ -1756,19 +2165,29 @@ function schPaint(n){
   w.querySelectorAll(".gs-win").forEach(function(e,i){e.classList.toggle("on",i<lit)});
   var ini=$("gschi");if(ini)ini.textContent=n?n.trim().charAt(0).toUpperCase():"?";
 }
+function schChoiceLabel(){var n=schName();return GNEW?(n||"Escribe el nombre del colegio"):(GCOL?GCOLN:"Elige tu colegio")}
 function schUpdate(){
   var n=schName(),el=$("gschn");if(!el)return;
   var prev=SCHLAST;SCHLAST=n;
-  el.className="gsch-sign"+(n?"":" empty")+(n.length>22?" long":"")+(GNEW?" edit":"");
-  el.innerHTML=schLetters(n,n.length>prev.length?"last":"none");
+  var label=schChoiceLabel();
+  el.className="gsch-sign-text"+(n?"":" empty")+(label.length>22?" long":"")+(GNEW?" edit":"");
+  el.innerHTML=schLetters(label,n.length>prev.length?"last":"none");
+  var btn=el.closest("button");if(btn)btn.setAttribute("aria-label","Colegio: "+label);
   schPaint(n);
+}
+function gSchoolPicker(first,changed){
+  var n=schName(),label=schChoiceLabel(),mode=first||changed?"all":"none";
+  var cls="gsch-sign-text"+(n?"":" empty")+(label.length>22?" long":"")+(GNEW?" edit":"");
+  var h='<div class="gdd gsch-dd'+(GOPEN?" open":"")+'"><button type="button" class="gddb gsch-picker" data-ac="col_abrir" aria-haspopup="listbox" aria-label="Colegio: '+esc(label)+'" aria-expanded="'+(GOPEN?"true":"false")+'"><span class="gsch-pick-label">Colegio</span><span class="'+cls+'" id="gschn" aria-live="polite">'+schLetters(label,mode)+'</span><i aria-hidden="true">▾</i></button><div class="gddl" role="listbox">';
+  h+=COLEGIOS.length?COLEGIOS.map(function(c){var selected=c.id===GCOL&&!GNEW;return'<button type="button" role="option" aria-selected="'+(selected?"true":"false")+'" data-ac="col_pick" data-id="'+esc(c.id)+'" data-n="'+esc(c.nombre)+'" class="'+(selected?"on":"")+'">'+esc(c.nombre)+'</button>'}).join(""):'<p class="gempty">Todavía no hay colegios registrados.</p>';
+  return h+'<button type="button" class="gnew" data-ac="col_nuevo">➕ Mi colegio no está: crear uno nuevo</button></div></div>';
 }
 function gSchool(first){
   var n=schName(),ch=n!==SCHLAST,lit=schLit(n);SCHLAST=n;
   var W=[[60,76],[86,76],[154,76],[180,76],[60,106],[86,106],[154,106],[180,106]].map(function(p,i){
     return'<rect class="gs-win'+(!first&&i<lit?" on":"")+'" style="--i:'+i+'" x="'+p[0]+'" y="'+p[1]+'" width="14" height="18" rx="2"/>';
   }).join("");
-  return'<div class="gsch'+(first?" enter":"")+'" id="gsch" style="--sh:'+schHue(n)+'">'+
+  return'<div class="gsch'+(first?" enter":"")+(GOPEN?" picker-open":"")+'" id="gsch" style="--sh:'+schHue(n)+'">'+
     '<svg class="gsch-svg" viewBox="0 0 240 150" aria-hidden="true">'+
     '<ellipse class="gs-cl c1" cx="38" cy="26" rx="18" ry="6"/><ellipse class="gs-cl c2" cx="196" cy="20" rx="22" ry="7"/><circle class="gs-star s1" cx="20" cy="60" r="1.4"/><circle class="gs-star s2" cx="220" cy="54" r="1.2"/><circle class="gs-star s3" cx="160" cy="14" r="1.1"/>'+
     '<rect class="gs-ground" x="0" y="134" width="240" height="16"/>'+
@@ -1777,14 +2196,11 @@ function gSchool(first){
     '<g class="gs-flag"><line x1="120" y1="26" x2="120" y2="6"/><path class="gs-fl" d="M120 6 L144 12 L120 19 Z"/></g>'+
     '<circle class="gs-crest" cx="120" cy="50" r="11"/><text class="gs-init" id="gschi" x="120" y="55" text-anchor="middle">'+esc(n?n.trim().charAt(0).toUpperCase():"?")+'</text>'+
     W+'<rect class="gs-door" x="106" y="102" width="28" height="32" rx="3"/><rect class="gs-step" x="100" y="131" width="40" height="4" rx="1"/></g></svg>'+
-    '<div class="gsch-sign'+(n?"":" empty")+(n.length>22?" long":"")+(GNEW?" edit":"")+'" id="gschn" aria-live="polite">'+schLetters(n,first||ch?"all":"none")+'</div></div>';
+    gSchoolPicker(first,ch)+'</div>';
 }
 function gColegio(){
   var first=!SCHSEEN;SCHSEEN=true;
-  var sel=GNEW?"➕ Crear un colegio nuevo":(GCOL?esc(GCOLN):"Elige tu colegio");
-  var h='<div class="gcol'+(first?" enter":"")+'">'+gSchool(first)+'<label>Colegio</label><div class="gdd'+(GOPEN?" open":"")+'"><button type="button" class="gddb" data-ac="col_abrir" aria-expanded="'+(GOPEN?"true":"false")+'"><span>'+sel+'</span><i>▾</i></button><div class="gddl" role="listbox">';
-  h+=COLEGIOS.length?COLEGIOS.map(function(c){return'<button type="button" role="option" data-ac="col_pick" data-id="'+esc(c.id)+'" data-n="'+esc(c.nombre)+'" class="'+(c.id===GCOL&&!GNEW?"on":"")+'">'+esc(c.nombre)+'</button>'}).join(""):'<p class="gempty">Todavía no hay colegios registrados.</p>';
-  h+='<button type="button" class="gnew" data-ac="col_nuevo">➕ Mi colegio no está: crear uno nuevo</button></div></div>';
+  var h='<div class="gcol'+(first?" enter":"")+'">'+gSchool(first);
   if(GNEW)h+=gField("g_cnom","Nombre del colegio","text",GF.cnom,'maxlength="60" autocomplete="off"')+gField("g_cclave","Contraseña del colegio (mínimo 6)","password",GF.cclave,'autocomplete="new-password"')+'<p class="gs">Con esta contraseña otros organizadores podrán unirse a tu colegio. Los estudiantes usan el código que verás en Ajustes.</p>';
   else if(GCOL)h+=gField("g_cclave","Contraseña del colegio","password",GF.cclave,'autocomplete="off"')+'<p class="gs">La puso quien creó el colegio.</p>';
   return h+'</div>';
@@ -1797,6 +2213,7 @@ function gForm(){
   GDIR="";
   if(lg){
     return gCard(h+'<div class="'+cls+'"><h2 class="gh">Bienvenido de nuevo</h2><p class="gs gsub">Entra con tu correo y tu contraseña.</p>'+
+      gGoogleEntry()+
       gField("g_email","Correo electrónico","email",GF.email,'autocomplete="email" placeholder="tu@correo.com"')+
       gField("g_pass","Contraseña","password",GF.pass,'autocomplete="current-password"')+
       '<label class="grem"><input type="checkbox" data-ac="rem"'+(GREM?" checked":"")+'><span>Recordar mi correo en este equipo</span></label>'+err+
@@ -1804,7 +2221,7 @@ function gForm(){
       '<button type="button" class="glink" data-ac="modo" data-m="crear">¿No tienes cuenta? Crear una</button></div>');
   }
   var b='<div class="'+cls+'">';
-  if(!comp)b+='<h2 class="gh">Crea tu cuenta</h2><p class="gs gsub">Solo toma un minuto.</p><div class="gsec"><span>1</span>Tus datos</div>'+
+  if(!comp)b+='<h2 class="gh">Crea tu cuenta</h2><p class="gs gsub">Solo toma un minuto.</p>'+gGoogleEntry()+'<div class="gsec"><span>1</span>Tus datos</div>'+
     gField("g_nombre","Nombre","text",GF.nombre,'maxlength="40" autocomplete="name" placeholder="Tu nombre"')+
     gField("g_email","Correo electrónico","email",GF.email,'autocomplete="email" placeholder="tu@correo.com"')+
     '<div class="g2"><div>'+gField("g_pass","Contraseña","password",GF.pass,'autocomplete="new-password" placeholder="Mínimo 6"')+'</div><div>'+gField("g_pass2","Repítela","password",GF.pass2,'autocomplete="new-password"')+'</div></div>'+gMeter()+
@@ -1836,7 +2253,7 @@ async function authInit(){
   AUTH="carga";render();
   if(!SB_URL||!SB_KEY||!window.supabase||!window.supabase.createClient){AUTH="config";render();return}
   try{
-    SB=window.supabase.createClient(SB_URL,SB_KEY);
+    SB=window.supabase.createClient(SB_URL,SB_KEY,{auth:{flowType:"pkce"}});
     await cargarColegios();
     var r=await SB.auth.getSession(),s=r&&r.data&&r.data.session;
     if(s)await resolverSesion(s);else{AUTH="fuera";GFOCUS="g_email";render()}
@@ -1897,7 +2314,7 @@ async function crearCuenta(){
     if(!GORG&&!(await rpc("validar_codigo",{p_codigo:GF.codigo})))throw new Error("Código de colegio no válido. Pídeselo al organizador de tu colegio.");
     var r=await SB.auth.signUp({email:email,password:GF.pass,options:{data:{nombre:nombre}}});
     if(r.error)throw r.error;
-    if(!r.data||!r.data.session)throw new Error("Supabase pidió confirmar el correo. Hay que desactivar «Confirm email» en Authentication, Providers, Email.");
+    if(!r.data||!r.data.session){var r2=await SB.auth.signInWithPassword({email:email,password:GF.pass});if(r2.data&&r2.data.session){r=r2;}else{throw new Error("Supabase pidió confirmar el correo. Hay que desactivar «Confirm email» en Authentication, Providers, Email.");}}
     try{await gUnirme()}catch(e2){GERR=gerr(e2)}
     GF.pass=GF.pass2=GF.cclave="";
     await resolverSesion(r.data.session);
@@ -1925,6 +2342,34 @@ async function iniciarSesion(){
     if(r.error)throw r.error;
     try{if(GREM)localStorage.setItem("torneo-email",email);else localStorage.removeItem("torneo-email")}catch(e2){}
     GF.pass="";await resolverSesion(r.data.session);
+  }catch(e){GERR=gerr(e)}
+  GBUSY=false;if(AUTH!=="ok")gateRender();
+}
+async function iniciarConGoogle(){
+  if(GBUSY)return;
+  GBUSY=true;GERR="";gateRender();
+  try{
+    var bridge=window.HybridWebView,invoke=bridge&&bridge.InvokeDotNet;
+    if(typeof invoke==="function"){
+      var redirectTo=await invoke.call(bridge,"PrepareGoogleRedirectUri");
+      var inicio=await SB.auth.signInWithOAuth({provider:"google",options:{redirectTo:redirectTo,skipBrowserRedirect:true}});
+      if(inicio.error)throw inicio.error;
+      if(!inicio.data||!inicio.data.url)throw new Error("Supabase no devolvió el enlace de Google.");
+      var raw=await invoke.call(bridge,"AuthenticateGoogleAsync",[inicio.data.url]);
+      var cb=typeof raw==="string"?JSON.parse(raw):raw;
+      if(cb&&cb.cancelled)throw{code:"google_cancelled",cancelled:true};
+      if(cb&&cb.timeout)throw{code:"google_timeout",timeout:true};
+      if(cb&&cb.error)throw new Error(cb.error_description||cb.error);
+      if(!cb||!cb.code)throw new Error("Google no devolvió el código de acceso.");
+      var ses=await SB.auth.exchangeCodeForSession(cb.code);
+      if(ses.error)throw ses.error;
+      await resolverSesion(ses.data.session);
+    }else{
+      var callback=new URL(location.href);callback.hash="";callback.search="";
+      var web=await SB.auth.signInWithOAuth({provider:"google",options:{redirectTo:callback.toString()}});
+      if(web.error)throw web.error;
+      return;
+    }
   }catch(e){GERR=gerr(e)}
   GBUSY=false;if(AUTH!=="ok")gateRender();
 }
@@ -2086,6 +2531,7 @@ document.addEventListener("click",async function(e){
     else if(a==="col_pick"){GCOL=d.id;GCOLN=d.n;GNEW=false;GOPEN=false;GERR="";gateRender()}
     else if(a==="col_nuevo"){GNEW=true;GCOL="";GCOLN="";GOPEN=false;GERR="";GFOCUS="g_cnom";gateRender()}
     else if(a==="entrar")await iniciarSesion();
+    else if(a==="google")await iniciarConGoogle();
     else if(a==="crear")await crearCuenta();
     else if(a==="completar")await completarRegistro();
     else if(a==="salir")await cerrarSesion();

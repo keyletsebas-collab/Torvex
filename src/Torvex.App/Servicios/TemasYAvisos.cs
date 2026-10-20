@@ -28,7 +28,7 @@ public sealed class Temas
     public async Task AplicarAsync(HybridWebView? hw)
     {
         if (hw == null) return;
-        try { await hw.InvokeJavaScriptAsync("torvex.aplicarTema", Paleta.Tono, Paleta.Saturacion, ModoActual); } catch { }
+        try { await hw.InvokeJavaScriptAsync("torvex.aplicarTema", new object?[] { Paleta.Tono, Paleta.Saturacion, ModoActual }); } catch { }
     }
 
     public async Task ElegirPaletaAsync(string clave, HybridWebView? hw = null)

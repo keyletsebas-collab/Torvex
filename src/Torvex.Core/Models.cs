@@ -64,6 +64,8 @@ public sealed class EntradaHistorial
     [JsonPropertyName("a")] public int A { get; set; }
     [JsonPropertyName("r")] public Evento? R { get; set; }
     [JsonPropertyName("ri")] public int Ri { get; set; }
+    [JsonPropertyName("m")] public Evento? M { get; set; }
+    [JsonPropertyName("mi")] public int Mi { get; set; }
 }
 
 /// <summary>Estado del marcador en vivo de un partido.</summary>

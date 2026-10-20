@@ -28,11 +28,22 @@ function liveAct(t,m,x,k,v){
   if(x=="undo"){
     var e=h.pop();if(!e){L.h=h;L.ev=ev;return}
     var nl=JSON.parse(typeof e=="string"?e:e.s);nl.h=h;
-    if(typeof e!="string"){if(e.a)ev.pop();if(e.r)ev.splice(e.ri,0,e.r)}
+    if(typeof e!="string"){if(e.a)ev.pop();if(e.r)ev.splice(e.ri,0,e.r);if(e.m&&e.mi>=0&&e.mi<ev.length)ev[e.mi]=e.m}
     nl.ev=ev;m.live=nl;sync(m);return;
   }
   function addEv(o){o.k=k;o.p=pl;o.lab=lab;o.ts=Date.now();ev.push(o);ent.a=1}
   function popEv(xs){for(var j=ev.length-1;j>=0;j--)if(ev[j].k==k&&xs.indexOf(ev[j].x)>=0){ent.r=ev.splice(j,1)[0];ent.ri=j;return}}
+  function minusBasketPoint(){
+    if(L.p[k]<=0)return;
+    L.p[k]--;
+    for(var j=ev.length-1;j>=0;j--){
+      if(ev[j].k!=k||ev[j].x!="pt")continue;
+      var points=ev[j].v||1;
+      if(points>1){ent.m=JSON.parse(JSON.stringify(ev[j]));ent.mi=j;ev[j].v=points-1}
+      else popEv(["pt"]);
+      return;
+    }
+  }
   if(x=="yc"||x=="rc")addEv({x:x});
   else if(L.k=="beis"){
     if(x=="run"||x=="unrun"){var ar=L.r[k];while(ar.length<=L.inn)ar.push(0);ar[L.inn]=Math.max(0,ar[L.inn]+(x=="run"?1:-1));if(x=="run")addEv({x:"run",v:1});else popEv(["run"])}
@@ -49,7 +60,7 @@ function liveAct(t,m,x,k,v){
       if(L.cur[i]>=tg&&L.cur[i]-L.cur[o]>=2){L.sets.push(L.cur.slice());L.w[k]++;L.cur=[0,0];if(L.w[k]>=NEED)L.over=true}}
     else if(x=="pm"){L.cur[i]=Math.max(0,L.cur[i]-1);popEv(["pt","ace","blk"])}
   }else{if(x=="pt"){L.p[k]+=1;addEv({x:"pt",v:1})}else if(x=="pm"){L.p[k]=Math.max(0,L.p[k]-1);popEv(["pt"])}}
-  if(ch){h.push({s:snap,a:ent.a,r:ent.r,ri:ent.ri});if(h.length>25)h.shift()}
+  if(ch){h.push({s:snap,a:ent.a,r:ent.r,ri:ent.ri,m:ent.m,mi:ent.mi});if(h.length>25)h.shift()}
   L.h=h;L.ev=ev;sync(m);
 }
 function finishLive(t,m){

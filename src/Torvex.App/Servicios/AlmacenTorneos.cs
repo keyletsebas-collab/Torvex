@@ -7,12 +7,15 @@ namespace Torvex.App.Servicios;
 /// Torneos del colegio, guardados en la tabla "docs" de Supabase (col = "torneos"), igual que la versión web.
 /// Guarda en segundo plano (gana el último cambio) y se actualiza solo cada pocos segundos.
 /// </summary>
-public sealed class AlmacenTorneos : IDisposable
+public sealed partial class AlmacenTorneos : IDisposable
 {
     readonly Cuentas _cuentas;
-    readonly Dictionary<long, Torneo> _sucios = new();
-    readonly object _lock = new();
+    readonly Dictionary<long, (Torneo Torneo, string? Colegio)> _sucios = [];
+    readonly HashSet<long> _eliminando = [];
+    readonly Lock _lock = new();
+    readonly SemaphoreSlim _persistencia = new(1, 1);
     bool _guardando;
+    long _versionLocal;
     CancellationTokenSource? _ciclo;
 
     public AlmacenTorneos(Cuentas cuentas)
@@ -24,7 +27,7 @@ public sealed class AlmacenTorneos : IDisposable
     public event Action? Cambio;
     public event Action<string>? Falla;
 
-    public List<Torneo> Lista { get; private set; } = new();
+    public List<Torneo> Lista { get; private set; } = [];
     public bool Cargado { get; private set; }
 
     public Torneo? Por(long id) => Lista.FirstOrDefault(t => t.Id == id);
@@ -55,24 +58,34 @@ public sealed class AlmacenTorneos : IDisposable
     void Detener()
     {
         _ciclo?.Cancel(); _ciclo = null;
-        Lista = new(); Cargado = false;
-        lock (_lock) _sucios.Clear();
+        Lista = []; Cargado = false;
+        lock (_lock) { _sucios.Clear(); _versionLocal++; }
     }
 
     public async Task RefrescarAsync()
     {
         if (Colegio == null) return;
         // no pisar cambios locales que todavía se están guardando
-        lock (_lock) if (_guardando || _sucios.Count > 0) return;
-        var r = await Sb.SeleccionarAsync("docs", $"select=id,data&colegio_id=eq.{Colegio}&col=eq.torneos");
+        long version;
+        lock (_lock)
+        {
+            if (_guardando || _sucios.Count > 0) return;
+            version = _versionLocal;
+        }
+        var colegio = Colegio;
+        if (colegio == null) return;
+        var r = await Sb.SeleccionarAsync("docs", $"select=id,data&colegio_id=eq.{colegio}&col=eq.torneos");
         if (r.ValueKind != JsonValueKind.Array) return;
         var nueva = new List<Torneo>();
         foreach (var fila in r.EnumerateArray())
         {
             try { var t = Json.De<Torneo>(fila.GetProperty("data").GetRawText()); if (t != null) nueva.Add(t); } catch { }
         }
-        lock (_lock) if (_guardando || _sucios.Count > 0) return;
-        Lista = nueva.OrderByDescending(t => t.Id).ToList();
+        lock (_lock)
+        {
+            if (_guardando || _sucios.Count > 0 || version != _versionLocal) return;
+            Lista = [.. nueva.Where(t => !_eliminando.Contains(t.Id)).OrderByDescending(t => t.Id)];
+        }
         Cargado = true;
         Cambio?.Invoke();
     }
@@ -80,9 +93,16 @@ public sealed class AlmacenTorneos : IDisposable
     /// <summary>Guarda una edición. Varias llamadas seguidas se agrupan y se sube solo la última versión.</summary>
     public void Guardar(Torneo t)
     {
-        if (!Lista.Contains(t)) { Lista.Add(t); Lista = Lista.OrderByDescending(x => x.Id).ToList(); }
+        var colegio = Colegio;
         bool iniciar;
-        lock (_lock) { _sucios[t.Id] = t; iniciar = !_guardando; if (iniciar) _guardando = true; }
+        lock (_lock)
+        {
+            if (_eliminando.Contains(t.Id)) return;
+            if (!Lista.Contains(t)) { Lista.Add(t); Lista = [.. Lista.OrderByDescending(x => x.Id)]; }
+            _sucios[t.Id] = (t, colegio);
+            iniciar = !_guardando;
+            if (iniciar) _guardando = true;
+        }
         Cambio?.Invoke();
         if (iniciar) _ = Task.Run(VaciarAsync);
     }
@@ -91,29 +111,47 @@ public sealed class AlmacenTorneos : IDisposable
     {
         while (true)
         {
-            Torneo? t;
+            (Torneo Torneo, string? Colegio) pendiente;
             lock (_lock)
             {
-                t = _sucios.Values.FirstOrDefault();
-                if (t == null) { _guardando = false; return; }
-                _sucios.Remove(t.Id);
+                if (_sucios.Count == 0) { _guardando = false; return; }
+                var id = _sucios.Keys.First();
+                pendiente = _sucios[id];
+                _sucios.Remove(id);
             }
+            await _persistencia.WaitAsync();
             try
             {
-                var data = JsonSerializer.SerializeToElement(t, Json.Opciones);
-                await Sb.SubirAsync("docs", new[] { new { colegio_id = Colegio, col = "torneos", id = t.Id.ToString(), data } }, "colegio_id,col,id");
+                lock (_lock) if (_eliminando.Contains(pendiente.Torneo.Id)) continue;
+                if (pendiente.Colegio == null) continue;
+                var data = JsonSerializer.SerializeToElement(pendiente.Torneo, Json.Opciones);
+                await Sb.SubirAsync("docs", new[] { new { colegio_id = pendiente.Colegio, col = "torneos", id = pendiente.Torneo.Id.ToString(), data } }, "colegio_id,col,id");
             }
             catch (Exception e) { Falla?.Invoke("No se pudo guardar: " + Mensajes.Traducir(e)); }
+            finally { _persistencia.Release(); }
         }
     }
 
     public async Task EliminarAsync(Torneo t)
     {
-        Lista.Remove(t);
-        lock (_lock) _sucios.Remove(t.Id);
+        var colegio = Colegio;
+        lock (_lock)
+        {
+            _eliminando.Add(t.Id);
+            _versionLocal++;
+            _sucios.Remove(t.Id);
+            Lista.Remove(t);
+        }
         Cambio?.Invoke();
-        try { await Sb.EliminarAsync("docs", $"colegio_id=eq.{Colegio}&col=eq.torneos&id=eq.{t.Id}"); }
-        catch (Exception e) { Falla?.Invoke("No se pudo eliminar: " + Mensajes.Traducir(e)); }
+        if (colegio == null) return;
+        await _persistencia.WaitAsync();
+        try { await Sb.EliminarAsync("docs", $"colegio_id=eq.{colegio}&col=eq.torneos&id=eq.{t.Id}"); }
+        catch (Exception e)
+        {
+            lock (_lock) _eliminando.Remove(t.Id);
+            Falla?.Invoke("No se pudo eliminar: " + Mensajes.Traducir(e));
+        }
+        finally { _persistencia.Release(); }
     }
 
     public Torneo Crear(string nombre, string deporte, string? rama, string tipo)

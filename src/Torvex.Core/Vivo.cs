@@ -74,6 +74,7 @@ public static class Vivo
         var lab = Etiqueta(L);
         var pl = jugador ?? "";
         var aniadido = 0; Evento? quitado = null; var quitadoIdx = 0;
+        Evento? modificado = null; var modificadoIdx = 0;
 
         if (x == "undo")
         {
@@ -83,6 +84,7 @@ public static class Vivo
             nl.H = h;
             if (e.A != 0 && ev.Count > 0) ev.RemoveAt(ev.Count - 1);
             if (e.R != null) ev.Insert(Math.Min(e.Ri, ev.Count), e.R);
+            if (e.M != null && e.Mi >= 0 && e.Mi < ev.Count) ev[e.Mi] = e.M;
             nl.Ev = ev; m.Live = nl; Sincronizar(m);
             return;
         }
@@ -96,6 +98,23 @@ public static class Vivo
         {
             for (var j = ev.Count - 1; j >= 0; j--)
                 if (ev[j].K == k && tipos.Contains(ev[j].X)) { quitado = ev[j]; ev.RemoveAt(j); quitadoIdx = j; return; }
+        }
+        void RestarPunto()
+        {
+            if (L.P![k] <= 0) return;
+            L.P[k]--;
+            for (var j = ev.Count - 1; j >= 0; j--)
+            {
+                if (ev[j].K != k || ev[j].X != "pt") continue;
+                if (ev[j].V > 1)
+                {
+                    modificado = Json.De<Evento>(Json.A(ev[j]))!;
+                    modificadoIdx = j;
+                    ev[j].V--;
+                }
+                else Quitar("pt");
+                return;
+            }
         }
 
         if (x is "yc" or "rc") Agregar(x);
@@ -114,7 +133,7 @@ public static class Vivo
         else if (L.K == "bas3")
         {
             if (x == "pt") { L.P![k] += v; Agregar("pt", v); }
-            else if (x == "pm") { L.P![k] = Math.Max(0, L.P[k] - 1); Quitar("pt"); }
+            else if (x == "pm") RestarPunto();
             else if (x == "foul") { L.F![k] += 1; Agregar("foul"); }
             else if (x == "clk")
             {
@@ -148,7 +167,7 @@ public static class Vivo
 
         if (cambia)
         {
-            h.Add(new EntradaHistorial { S = snap, A = aniadido, R = quitado, Ri = quitadoIdx });
+            h.Add(new EntradaHistorial { S = snap, A = aniadido, R = quitado, Ri = quitadoIdx, M = modificado, Mi = modificadoIdx });
             if (h.Count > 25) h.RemoveAt(0);
         }
         L.H = h; L.Ev = ev; Sincronizar(m);

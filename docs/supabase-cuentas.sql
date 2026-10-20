@@ -120,7 +120,14 @@ create or replace function public.al_crear_usuario() returns trigger
 language plpgsql security definer set search_path = public as $$
 begin
   insert into public.perfiles (id, nombre)
-  values (new.id, left(coalesce(nullif(btrim(new.raw_user_meta_data ->> 'nombre'), ''), 'Usuario'), 40))
+  values (new.id, left(coalesce(
+    nullif(btrim(new.raw_user_meta_data ->> 'nombre'), ''),
+    nullif(btrim(new.raw_user_meta_data ->> 'full_name'), ''),
+    nullif(btrim(new.raw_user_meta_data ->> 'name'), ''),
+    nullif(btrim(new.raw_user_meta_data ->> 'given_name'), ''),
+    nullif(split_part(coalesce(new.email, ''), '@', 1), ''),
+    'Usuario'
+  ), 40))
   on conflict (id) do nothing;
   return new;
 end $$;
