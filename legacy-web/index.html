@@ -2100,7 +2100,7 @@ function admResumen(){
 var REQ_LOGIN=typeof SIN_LOGIN==="undefined",AUTH="carga",SB=null,MYP=null,MYMAIL="",COLEGIOS=[],COLEERR="";
 var GMODE="login",GORG=false,GNEW=false,GCOL="",GCOLN="",GOPEN=false,GERR="",GBUSY=false;
 var GF={nombre:"",email:"",pass:"",pass2:"",codigo:"",cnom:"",cclave:""};
-var MEM=[],MEMERR="",APR=null,MEMT=null,WAITT=null,MYCODE="",MYSCHOOLPASS="",SCHOOLPASSERR="";
+var MEM=[],MEMERR="",APR=null,MEMT=null,WAITT=null,MYCODE="",MYSCHOOLPASS="",PASS_EDIT=false;
 
 /* ---------- utilidades ---------- */
 async function rpc(n,a){var r=await SB.rpc(n,a||{});if(r.error)throw r.error;return r.data}
@@ -2115,6 +2115,7 @@ function gerr(e){
   if(c==="over_request_rate_limit"||c==="over_email_send_rate_limit"||/rate limit|too many/i.test(m))return"Demasiados intentos. Espera un momento.";
   if(c==="email_address_invalid"||/email.*invalid|invalid.*email/i.test(m))return"Escribe un correo válido.";
   if(/provider.*not enabled|unsupported provider|google.*not enabled/i.test(m))return"Google todavía no está activado en la configuración de Supabase.";
+  if(/Could not find the function public\.(clave_visible_mi_colegio|establecer_clave_colegio)/i.test(m))return"Activa esta opción ejecutando el SQL actualizado en Supabase.";
   if(/redirect.*(not allowed|url)|redirect_uri/i.test(m))return"La dirección de regreso de Torvex no está permitida en Supabase.";
   if(/failed to fetch|network|load failed/i.test(m))return"No hay conexión con el servidor. Revisa tu internet.";
   return m||"Ocurrió un error. Inténtalo de nuevo.";
@@ -2493,8 +2494,8 @@ async function cargarMiembros(){
 async function cargarCodigo(){try{MYCODE=(await rpc("codigo_mi_colegio"))||""}catch(e){}soft()}
 async function cargarClaveColegio(){
   if(!SB||!MYP||MYP.estado!=="aprobado"||!MYP.colegio_id)return;
-  try{MYSCHOOLPASS=(await rpc("clave_visible_mi_colegio"))||"";SCHOOLPASSERR=""}
-  catch(e){MYSCHOOLPASS="";SCHOOLPASSERR=gerr(e)}
+  try{MYSCHOOLPASS=(await rpc("clave_visible_mi_colegio"))||""}
+  catch(e){MYSCHOOLPASS=""}
   soft();
 }
 function codigoCard(){
@@ -2504,10 +2505,12 @@ function codigoCard(){
 function claveColegioCard(){
   if(!SB||!MYP||MYP.estado!=="aprobado"||!MYP.colegio_id)return"";
   var h='<div class="rs gcode gschoolpass"><b>Contraseña del colegio</b><p class="hint">La pueden ver los miembros aprobados de <b>'+esc(colegioNombre())+'</b>.</p>';
-  if(SCHOOLPASSERR)h+='<p class="hint">'+esc(SCHOOLPASSERR)+'</p>';
   if(MYSCHOOLPASS)h+='<div class="gcv"><code>'+esc(MYSCHOOLPASS)+'</code></div><div class="ctl"><button data-ac="pass_copy">Copiar contraseña</button></div>';
-  else h+='<p class="hint">Todavía no hay una contraseña visible. La anterior se guardó como hash y no se puede recuperar; el organizador debe establecer una nueva.</p>';
-  if(isOrg())h+='<label for="g_new_school_pass">'+(MYSCHOOLPASS?'Cambiar contraseña del colegio':'Establecer contraseña del colegio')+'</label><div class="gpw"><input class="gin" id="g_new_school_pass" type="password" maxlength="128" autocomplete="new-password" placeholder="Mínimo 6 caracteres"><button type="button" class="geye" data-ac="ver" data-for="g_new_school_pass" aria-label="Mostrar contraseña" title="Mostrar u ocultar">'+EYE+'</button></div><div class="ctl"><button class="pri" data-ac="pass_set">'+(MYSCHOOLPASS?'Guardar nueva contraseña':'Guardar contraseña')+'</button></div>';
+  else h+='<p class="hint">No hay una contraseña visible todavía. La clave anterior no se puede recuperar; el organizador puede establecer una nueva.</p>';
+  if(isOrg()){
+    if(PASS_EDIT)h+='<label for="g_new_school_pass">'+(MYSCHOOLPASS?'Nueva contraseña':'Contraseña nueva')+'</label><div class="gpw"><input class="gin" id="g_new_school_pass" type="password" maxlength="128" autocomplete="new-password" placeholder="Mínimo 6 caracteres"><button type="button" class="geye" data-ac="ver" data-for="g_new_school_pass" aria-label="Mostrar contraseña" title="Mostrar u ocultar">'+EYE+'</button></div><div class="ctl"><button class="pri" data-ac="pass_set">Guardar contraseña</button><button data-ac="pass_cancel">Cancelar</button></div>';
+    else h+='<div class="ctl"><button class="pri" data-ac="pass_edit">'+(MYSCHOOLPASS?'Cambiar contraseña':'Establecer contraseña')+'</button></div>';
+  }
   return h+'</div>';
 }
 function cargoPanel(p){
@@ -2580,13 +2583,15 @@ document.addEventListener("click",async function(e){
       if(!confirm("El código anterior dejará de servir. ¿Generar uno nuevo?"))return;
       MYCODE=await rpc("regenerar_codigo_colegio");toast("Código nuevo generado");render();
     }
+    else if(a==="pass_edit"){PASS_EDIT=true;render()}
+    else if(a==="pass_cancel"){PASS_EDIT=false;render()}
     else if(a==="pass_copy"){try{await navigator.clipboard.writeText(MYSCHOOLPASS);toast("Contraseña copiada")}catch(x){toast("No se pudo copiar")}}
     else if(a==="pass_set"){
       var np=$("g_new_school_pass"),nv=np?(np.value||""):"";
       if(nv.length<6||nv.length>128){toast("La contraseña debe tener entre 6 y 128 caracteres.");return}
       if(!confirm("La nueva contraseña quedará visible para todos los miembros aprobados del colegio y reemplazará la anterior. ¿Continuar?"))return;
       await rpc("establecer_clave_colegio",{p_clave:nv});
-      MYSCHOOLPASS=nv;SCHOOLPASSERR="";toast("Contraseña del colegio actualizada");render();
+      MYSCHOOLPASS=nv;PASS_EDIT=false;toast("Contraseña del colegio actualizada");render();
     }
   }catch(err){toast(gerr(err))}
 });
