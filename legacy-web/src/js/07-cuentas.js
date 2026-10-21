@@ -1,8 +1,8 @@
 // Cuentas con Supabase: acceso obligatorio, colegios, aprobación de miembros y conexión con los datos
-var REQ_LOGIN=typeof SIN_LOGIN==="undefined",AUTH="carga",SB=null,MYP=null,MYMAIL="",COLEGIOS=[];
+var REQ_LOGIN=typeof SIN_LOGIN==="undefined",AUTH="carga",SB=null,MYP=null,MYMAIL="",COLEGIOS=[],COLEERR="";
 var GMODE="login",GORG=false,GNEW=false,GCOL="",GCOLN="",GOPEN=false,GERR="",GBUSY=false;
 var GF={nombre:"",email:"",pass:"",pass2:"",codigo:"",cnom:"",cclave:""};
-var MEM=[],MEMERR="",APR=null,MEMT=null,WAITT=null,MYCODE="";
+var MEM=[],MEMERR="",APR=null,MEMT=null,WAITT=null,MYCODE="",MYSCHOOLPASS="",SCHOOLPASSERR="";
 
 /* ---------- utilidades ---------- */
 async function rpc(n,a){var r=await SB.rpc(n,a||{});if(r.error)throw r.error;return r.data}
@@ -22,7 +22,7 @@ function gerr(e){
   return m||"Ocurrió un error. Inténtalo de nuevo.";
 }
 function colegioNombre(){var c=COLEGIOS.filter(function(x){return MYP&&x.id===MYP.colegio_id})[0];return c?c.nombre:"tu colegio"}
-async function cargarColegios(){try{var r=await SB.from("colegios").select("id,nombre").order("nombre");COLEGIOS=r.data||[]}catch(e){COLEGIOS=[]}}
+async function cargarColegios(){try{var r=await SB.from("colegios").select("id,nombre").order("nombre");COLEERR=r.error?"No se pudo cargar la lista de colegios. Revisa tu conexión e inténtalo de nuevo.":"";COLEGIOS=r.data||[]}catch(e){COLEGIOS=[];COLEERR="No se pudo cargar la lista de colegios. Revisa tu conexión e inténtalo de nuevo."}}
 function clearWait(){if(WAITT){clearInterval(WAITT);WAITT=null}}
 function gateShow(on){document.body.classList.toggle("gating",!!on);var g=$("gate");if(g)g.hidden=!on}
 
@@ -105,8 +105,8 @@ function gSchool(first){
 function gColegio(){
   var first=!SCHSEEN;SCHSEEN=true;
   var h='<div class="gcol'+(first?" enter":"")+'">'+gSchool(first);
-  if(GNEW)h+=gField("g_cnom","Nombre del colegio","text",GF.cnom,'maxlength="60" autocomplete="off"')+gField("g_cclave","Contraseña del colegio (mínimo 6)","password",GF.cclave,'autocomplete="new-password"')+'<p class="gs">Con esta contraseña otros organizadores podrán unirse a tu colegio. Los estudiantes usan el código que verás en Ajustes.</p>';
-  else if(GCOL)h+=gField("g_cclave","Contraseña del colegio","password",GF.cclave,'autocomplete="off"')+'<p class="gs">La puso quien creó el colegio.</p>';
+  if(GNEW)h+=gField("g_cnom","Nombre del colegio","text",GF.cnom,'maxlength="60" autocomplete="off"')+gField("g_cclave","Contraseña del colegio (mínimo 6)","password",GF.cclave,'maxlength="128" autocomplete="new-password"')+'<p class="gs">Los organizadores que la conozcan podrán solicitar unirse; tú aprobarás su acceso. Los estudiantes usan el código que verás en Ajustes.</p>';
+  else if(GCOL)h+=gField("g_cclave","Contraseña del colegio","password",GF.cclave,'maxlength="128" autocomplete="off"')+'<p class="gs">La puso quien creó el colegio.</p>';
   return h+'</div>';
 }
 function gForm(){
@@ -170,7 +170,7 @@ async function resolverSesion(s){
   if(r.error)throw r.error;
   if(!r.data){
     try{await SB.auth.signOut({scope:"local"})}catch(e){}
-    MYP=null;AUTH="fuera";GMODE="login";GERR="El organizador rechazó tu entrada y tu cuenta fue eliminada. Puedes crear una nueva con el código correcto.";render();return;
+    MYP=null;AUTH="fuera";GMODE="login";GERR="No encontramos el perfil de esta cuenta. Si solicitaron acceso a un colegio, contacta al organizador para confirmar el estado de tu cuenta antes de registrarte otra vez.";render();return;
   }
   MYP=r.data;
   if(MYP.estado==="aprobado"){await entrarApp()}
@@ -189,6 +189,7 @@ async function entrarApp(){
   U=mkU(MYP.colegio_id);DB=mkDB(MYP.colegio_id);
   suscribir();
   AUTH="ok";gateShow(false);BOOT=true;
+  cargarClaveColegio();
   if(ADMIN){cargarMiembros();cargarCodigo();MEMT=setInterval(cargarMiembros,10000)}
   render();
 }
@@ -198,10 +199,10 @@ function gValidarColegio(){
   if(GNEW){
     if(GF.cnom.trim().length<2)return"Escribe el nombre del colegio.";
     if(COLEGIOS.some(function(c){return c.nombre.trim().toLowerCase()===GF.cnom.trim().toLowerCase()}))return"Ese colegio ya está registrado: elígelo en la lista.";
-    return(GF.cclave||"").length<6?"La contraseña del colegio debe tener al menos 6 caracteres.":"";
+    return(GF.cclave||"").length<6?"La contraseña del colegio debe tener al menos 6 caracteres.":(GF.cclave||"").length>128?"La contraseña del colegio no puede superar 128 caracteres.":"";
   }
-  if(!GCOL)return"Elige tu colegio en la lista o crea uno nuevo.";
-  return GF.cclave?"":"Escribe la contraseña del colegio.";
+  if(!GCOL)return COLEERR||"Elige tu colegio en la lista o crea uno nuevo.";
+  return GF.cclave?(GF.cclave.length>128?"La contraseña del colegio no puede superar 128 caracteres.":""):"Escribe la contraseña del colegio.";
 }
 async function gUnirme(){
   if(!GORG)await rpc("unirme_con_codigo",{p_codigo:GF.codigo});
@@ -218,7 +219,7 @@ async function crearCuenta(){
     if(!GORG&&!(await rpc("validar_codigo",{p_codigo:GF.codigo})))throw new Error("Código de colegio no válido. Pídeselo al organizador de tu colegio.");
     var r=await SB.auth.signUp({email:email,password:GF.pass,options:{data:{nombre:nombre}}});
     if(r.error)throw r.error;
-    if(!r.data||!r.data.session){var r2=await SB.auth.signInWithPassword({email:email,password:GF.pass});if(r2.data&&r2.data.session){r=r2;}else{throw new Error("Supabase pidió confirmar el correo. Hay que desactivar «Confirm email» en Authentication, Providers, Email.");}}
+    if(!r.data||!r.data.session)throw new Error("Supabase no inició una sesión al crear la cuenta. Revisa que «Confirm email» esté desactivado. Si ya tenías cuenta, cambia a Iniciar sesión.");
     try{await gUnirme()}catch(e2){GERR=gerr(e2)}
     GF.pass=GF.pass2=GF.cclave="";
     await resolverSesion(r.data.session);
@@ -392,9 +393,24 @@ async function cargarMiembros(){
   soft();
 }
 async function cargarCodigo(){try{MYCODE=(await rpc("codigo_mi_colegio"))||""}catch(e){}soft()}
+async function cargarClaveColegio(){
+  if(!SB||!MYP||MYP.estado!=="aprobado"||!MYP.colegio_id)return;
+  try{MYSCHOOLPASS=(await rpc("clave_visible_mi_colegio"))||"";SCHOOLPASSERR=""}
+  catch(e){MYSCHOOLPASS="";SCHOOLPASSERR=gerr(e)}
+  soft();
+}
 function codigoCard(){
   if(!SB||!MYP||!isOrg())return"";
   return'<div class="rs gcode"><b>Código del colegio</b><p class="hint">Compártelo con estudiantes y participantes para que creen su cuenta en <b>'+esc(colegioNombre())+'</b>. Cada persona nueva queda pendiente hasta que la apruebes.</p><div class="gcv"><code>'+(MYCODE?esc(MYCODE):"…")+'</code></div><div class="ctl"><button data-ac="c_copy">Copiar código</button><button data-ac="c_regen">Generar código nuevo</button></div></div>';
+}
+function claveColegioCard(){
+  if(!SB||!MYP||MYP.estado!=="aprobado"||!MYP.colegio_id)return"";
+  var h='<div class="rs gcode gschoolpass"><b>Contraseña del colegio</b><p class="hint">La pueden ver los miembros aprobados de <b>'+esc(colegioNombre())+'</b>.</p>';
+  if(SCHOOLPASSERR)h+='<p class="hint">'+esc(SCHOOLPASSERR)+'</p>';
+  if(MYSCHOOLPASS)h+='<div class="gcv"><code>'+esc(MYSCHOOLPASS)+'</code></div><div class="ctl"><button data-ac="pass_copy">Copiar contraseña</button></div>';
+  else h+='<p class="hint">Todavía no hay una contraseña visible. La anterior se guardó como hash y no se puede recuperar; el organizador debe establecer una nueva.</p>';
+  if(isOrg())h+='<label for="g_new_school_pass">'+(MYSCHOOLPASS?'Cambiar contraseña del colegio':'Establecer contraseña del colegio')+'</label><div class="gpw"><input class="gin" id="g_new_school_pass" type="password" maxlength="128" autocomplete="new-password" placeholder="Mínimo 6 caracteres"><button type="button" class="geye" data-ac="ver" data-for="g_new_school_pass" aria-label="Mostrar contraseña" title="Mostrar u ocultar">'+EYE+'</button></div><div class="ctl"><button class="pri" data-ac="pass_set">'+(MYSCHOOLPASS?'Guardar nueva contraseña':'Guardar contraseña')+'</button></div>';
+  return h+'</div>';
 }
 function cargoPanel(p){
   var ks=Object.keys(RL),tn=allTeams();
@@ -404,7 +420,7 @@ function cargoPanel(p){
 }
 function mRow(p){
   var pe=p.estado==="pendiente",open=APR&&APR.id===p.id;
-  var h='<div class="rs mrw"><div class="pl"><span class="av">'+esc(String(p.nombre||"?").slice(0,1).toUpperCase())+'</span><span class="pn">'+esc(p.nombre)+(p.id===UID?' <small>Tú</small>':"")+'<br><span class="hint">'+esc(p.email||"")+'</span></span><span class="tag">'+(pe?"Pendiente":esc((RL[p.rol]||[p.rol])[0])+(p.equipo?" de "+esc(p.equipo):""))+'</span></div>';
+  var h='<div class="rs mrw"><div class="pl"><span class="av">'+esc(String(p.nombre||"?").slice(0,1).toUpperCase())+'</span><span class="pn">'+esc(p.nombre)+(p.id===UID?' <small>Tú</small>':"")+'<br><span class="hint">'+esc(p.email||"")+'</span></span><span class="tag">'+(pe?"Pendiente"+(p.rol==="organizador"?" · Organizador":""):esc((RL[p.rol]||[p.rol])[0])+(p.equipo?" de "+esc(p.equipo):""))+'</span></div>';
   if(open)h+=cargoPanel(p);
   else if(pe)h+='<div class="mact"><button class="mok" data-ac="m_ok" data-id="'+esc(p.id)+'" aria-label="Aprobar a '+esc(p.nombre)+'">✓</button><button class="mno" data-ac="m_no" data-id="'+esc(p.id)+'" aria-label="Rechazar a '+esc(p.nombre)+'">✕</button></div>';
   else h+='<div class="mact"><button data-ac="m_cambiar" data-id="'+esc(p.id)+'">Cambiar cargo</button></div>';
@@ -419,7 +435,7 @@ function miembrosHtml(){
 }
 function vMiembros(){
   if(!SB||!MYP||!isOrg())return'<div class="rs"><p class="empty">Solo el organizador puede ver los miembros.</p></div>';
-  return codigoCard()+miembrosHtml();
+  return codigoCard()+claveColegioCard()+miembrosHtml();
 }
 
 /* ---------- eventos de la pantalla de acceso y de miembros ---------- */
@@ -442,7 +458,7 @@ document.addEventListener("click",async function(e){
     else if(a==="m_ok"){
       p=MEM.filter(function(x){return x.id===d.id})[0];if(!p)return;
       if(!confirm("¿Seguro que quieres aprobar a "+p.nombre+"?"))return;
-      APR={id:p.id,cargo:"jugador",equipo:""};render();
+      APR={id:p.id,cargo:p.rol==="organizador"?"organizador":"jugador",equipo:""};render();
     }
     else if(a==="m_no"){
       p=MEM.filter(function(x){return x.id===d.id})[0];if(!p)return;
@@ -465,6 +481,14 @@ document.addEventListener("click",async function(e){
     else if(a==="c_regen"){
       if(!confirm("El código anterior dejará de servir. ¿Generar uno nuevo?"))return;
       MYCODE=await rpc("regenerar_codigo_colegio");toast("Código nuevo generado");render();
+    }
+    else if(a==="pass_copy"){try{await navigator.clipboard.writeText(MYSCHOOLPASS);toast("Contraseña copiada")}catch(x){toast("No se pudo copiar")}}
+    else if(a==="pass_set"){
+      var np=$("g_new_school_pass"),nv=np?(np.value||""):"";
+      if(nv.length<6||nv.length>128){toast("La contraseña debe tener entre 6 y 128 caracteres.");return}
+      if(!confirm("La nueva contraseña quedará visible para todos los miembros aprobados del colegio y reemplazará la anterior. ¿Continuar?"))return;
+      await rpc("establecer_clave_colegio",{p_clave:nv});
+      MYSCHOOLPASS=nv;SCHOOLPASSERR="";toast("Contraseña del colegio actualizada");render();
     }
   }catch(err){toast(gerr(err))}
 });

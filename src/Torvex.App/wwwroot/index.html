@@ -618,6 +618,8 @@ body.gating #shell,body.gating .toast:not([role]){display:none}
 /* código del colegio y miembros */
 .gcode .gcv{margin:10px 0;padding:12px;border-radius:10px;background:var(--soft);border:1px dashed var(--line);text-align:center}
 .gcode code{font:700 20px ui-monospace,Consolas,monospace;letter-spacing:2px;color:var(--ink)}
+.gschoolpass code{letter-spacing:1px;overflow-wrap:anywhere}
+.gschoolpass .gin{margin:8px 0}
 .mrw .pl{align-items:center}
 .mact{display:flex;gap:8px;margin-top:8px}
 .mok,.mno{width:38px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--soft);color:var(--ink);font-size:16px;cursor:pointer}
@@ -1687,7 +1689,7 @@ function vCuenta(){
   var me=myRole();
   if(!UID)return accGate();
   var h='<div class="rs"><b>Sesión iniciada'+(NAME?' como '+esc(NAME):"")+'</b><p class="hint">Rol actual: '+roleName()+'.'+(REQ_LOGIN?' Colegio: <b>'+esc(colegioNombre())+'</b>.':' Para cerrar sesión, sal de tu cuenta de Claude.')+'</p>'+(REQ_LOGIN?'<button data-ac="salir">Cerrar sesión</button>':'')+'</div>';
-  h+=(canAdmin()?'<div class="rs"><b>Administración</b><p class="hint">Gestiona ediciones, partidos, personas, noticias y respaldos.</p><button class="pri" data-a="go" data-s="admin">Abrir panel de administración</button></div>':"")+alertCard()+perfCard()+(REQ_LOGIN&&isOrg()?vMiembros():"");if(!DB||me=="organizador"||REQ_LOGIN)return h;
+  h+=(canAdmin()?'<div class="rs"><b>Administración</b><p class="hint">Gestiona ediciones, partidos, personas, noticias y respaldos.</p><button class="pri" data-a="go" data-s="admin">Abrir panel de administración</button></div>':"")+alertCard()+perfCard()+(REQ_LOGIN&&isOrg()?vMiembros():"")+(REQ_LOGIN&&!isOrg()?claveColegioCard():"");if(!DB||me=="organizador"||REQ_LOGIN)return h;
   var q=MYREQ||{},tn=allTeams();
   return h+'<h2>Crear mi perfil en el torneo</h2><div class="rs"><p class="hint">Cuéntanos quién eres y qué rol quieres. El organizador revisará tu solicitud.</p>'+
   (MYREQ?'<p class="hint">Ya enviaste una solicitud (pendiente). Puedes actualizarla.</p>':"")+
@@ -2095,10 +2097,10 @@ function admResumen(){
   return h;
 }
 // Cuentas con Supabase: acceso obligatorio, colegios, aprobación de miembros y conexión con los datos
-var REQ_LOGIN=typeof SIN_LOGIN==="undefined",AUTH="carga",SB=null,MYP=null,MYMAIL="",COLEGIOS=[];
+var REQ_LOGIN=typeof SIN_LOGIN==="undefined",AUTH="carga",SB=null,MYP=null,MYMAIL="",COLEGIOS=[],COLEERR="";
 var GMODE="login",GORG=false,GNEW=false,GCOL="",GCOLN="",GOPEN=false,GERR="",GBUSY=false;
 var GF={nombre:"",email:"",pass:"",pass2:"",codigo:"",cnom:"",cclave:""};
-var MEM=[],MEMERR="",APR=null,MEMT=null,WAITT=null,MYCODE="";
+var MEM=[],MEMERR="",APR=null,MEMT=null,WAITT=null,MYCODE="",MYSCHOOLPASS="",SCHOOLPASSERR="";
 
 /* ---------- utilidades ---------- */
 async function rpc(n,a){var r=await SB.rpc(n,a||{});if(r.error)throw r.error;return r.data}
@@ -2118,7 +2120,7 @@ function gerr(e){
   return m||"Ocurrió un error. Inténtalo de nuevo.";
 }
 function colegioNombre(){var c=COLEGIOS.filter(function(x){return MYP&&x.id===MYP.colegio_id})[0];return c?c.nombre:"tu colegio"}
-async function cargarColegios(){try{var r=await SB.from("colegios").select("id,nombre").order("nombre");COLEGIOS=r.data||[]}catch(e){COLEGIOS=[]}}
+async function cargarColegios(){try{var r=await SB.from("colegios").select("id,nombre").order("nombre");COLEERR=r.error?"No se pudo cargar la lista de colegios. Revisa tu conexión e inténtalo de nuevo.":"";COLEGIOS=r.data||[]}catch(e){COLEGIOS=[];COLEERR="No se pudo cargar la lista de colegios. Revisa tu conexión e inténtalo de nuevo."}}
 function clearWait(){if(WAITT){clearInterval(WAITT);WAITT=null}}
 function gateShow(on){document.body.classList.toggle("gating",!!on);var g=$("gate");if(g)g.hidden=!on}
 
@@ -2201,8 +2203,8 @@ function gSchool(first){
 function gColegio(){
   var first=!SCHSEEN;SCHSEEN=true;
   var h='<div class="gcol'+(first?" enter":"")+'">'+gSchool(first);
-  if(GNEW)h+=gField("g_cnom","Nombre del colegio","text",GF.cnom,'maxlength="60" autocomplete="off"')+gField("g_cclave","Contraseña del colegio (mínimo 6)","password",GF.cclave,'autocomplete="new-password"')+'<p class="gs">Con esta contraseña otros organizadores podrán unirse a tu colegio. Los estudiantes usan el código que verás en Ajustes.</p>';
-  else if(GCOL)h+=gField("g_cclave","Contraseña del colegio","password",GF.cclave,'autocomplete="off"')+'<p class="gs">La puso quien creó el colegio.</p>';
+  if(GNEW)h+=gField("g_cnom","Nombre del colegio","text",GF.cnom,'maxlength="60" autocomplete="off"')+gField("g_cclave","Contraseña del colegio (mínimo 6)","password",GF.cclave,'maxlength="128" autocomplete="new-password"')+'<p class="gs">Los organizadores que la conozcan podrán solicitar unirse; tú aprobarás su acceso. Los estudiantes usan el código que verás en Ajustes.</p>';
+  else if(GCOL)h+=gField("g_cclave","Contraseña del colegio","password",GF.cclave,'maxlength="128" autocomplete="off"')+'<p class="gs">La puso quien creó el colegio.</p>';
   return h+'</div>';
 }
 function gForm(){
@@ -2266,7 +2268,7 @@ async function resolverSesion(s){
   if(r.error)throw r.error;
   if(!r.data){
     try{await SB.auth.signOut({scope:"local"})}catch(e){}
-    MYP=null;AUTH="fuera";GMODE="login";GERR="El organizador rechazó tu entrada y tu cuenta fue eliminada. Puedes crear una nueva con el código correcto.";render();return;
+    MYP=null;AUTH="fuera";GMODE="login";GERR="No encontramos el perfil de esta cuenta. Si solicitaron acceso a un colegio, contacta al organizador para confirmar el estado de tu cuenta antes de registrarte otra vez.";render();return;
   }
   MYP=r.data;
   if(MYP.estado==="aprobado"){await entrarApp()}
@@ -2285,6 +2287,7 @@ async function entrarApp(){
   U=mkU(MYP.colegio_id);DB=mkDB(MYP.colegio_id);
   suscribir();
   AUTH="ok";gateShow(false);BOOT=true;
+  cargarClaveColegio();
   if(ADMIN){cargarMiembros();cargarCodigo();MEMT=setInterval(cargarMiembros,10000)}
   render();
 }
@@ -2294,10 +2297,10 @@ function gValidarColegio(){
   if(GNEW){
     if(GF.cnom.trim().length<2)return"Escribe el nombre del colegio.";
     if(COLEGIOS.some(function(c){return c.nombre.trim().toLowerCase()===GF.cnom.trim().toLowerCase()}))return"Ese colegio ya está registrado: elígelo en la lista.";
-    return(GF.cclave||"").length<6?"La contraseña del colegio debe tener al menos 6 caracteres.":"";
+    return(GF.cclave||"").length<6?"La contraseña del colegio debe tener al menos 6 caracteres.":(GF.cclave||"").length>128?"La contraseña del colegio no puede superar 128 caracteres.":"";
   }
-  if(!GCOL)return"Elige tu colegio en la lista o crea uno nuevo.";
-  return GF.cclave?"":"Escribe la contraseña del colegio.";
+  if(!GCOL)return COLEERR||"Elige tu colegio en la lista o crea uno nuevo.";
+  return GF.cclave?(GF.cclave.length>128?"La contraseña del colegio no puede superar 128 caracteres.":""):"Escribe la contraseña del colegio.";
 }
 async function gUnirme(){
   if(!GORG)await rpc("unirme_con_codigo",{p_codigo:GF.codigo});
@@ -2314,7 +2317,7 @@ async function crearCuenta(){
     if(!GORG&&!(await rpc("validar_codigo",{p_codigo:GF.codigo})))throw new Error("Código de colegio no válido. Pídeselo al organizador de tu colegio.");
     var r=await SB.auth.signUp({email:email,password:GF.pass,options:{data:{nombre:nombre}}});
     if(r.error)throw r.error;
-    if(!r.data||!r.data.session){var r2=await SB.auth.signInWithPassword({email:email,password:GF.pass});if(r2.data&&r2.data.session){r=r2;}else{throw new Error("Supabase pidió confirmar el correo. Hay que desactivar «Confirm email» en Authentication, Providers, Email.");}}
+    if(!r.data||!r.data.session)throw new Error("Supabase no inició una sesión al crear la cuenta. Revisa que «Confirm email» esté desactivado. Si ya tenías cuenta, cambia a Iniciar sesión.");
     try{await gUnirme()}catch(e2){GERR=gerr(e2)}
     GF.pass=GF.pass2=GF.cclave="";
     await resolverSesion(r.data.session);
@@ -2515,7 +2518,7 @@ function miembrosHtml(){
 }
 function vMiembros(){
   if(!SB||!MYP||!isOrg())return'<div class="rs"><p class="empty">Solo el organizador puede ver los miembros.</p></div>';
-  return codigoCard()+miembrosHtml();
+  return codigoCard()+claveColegioCard()+miembrosHtml();
 }
 
 /* ---------- eventos de la pantalla de acceso y de miembros ---------- */

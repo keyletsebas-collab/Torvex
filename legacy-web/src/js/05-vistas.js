@@ -199,7 +199,7 @@ function vCuenta(){
   var me=myRole();
   if(!UID)return accGate();
   var h='<div class="rs"><b>Sesión iniciada'+(NAME?' como '+esc(NAME):"")+'</b><p class="hint">Rol actual: '+roleName()+'.'+(REQ_LOGIN?' Colegio: <b>'+esc(colegioNombre())+'</b>.':' Para cerrar sesión, sal de tu cuenta de Claude.')+'</p>'+(REQ_LOGIN?'<button data-ac="salir">Cerrar sesión</button>':'')+'</div>';
-  h+=(canAdmin()?'<div class="rs"><b>Administración</b><p class="hint">Gestiona ediciones, partidos, personas, noticias y respaldos.</p><button class="pri" data-a="go" data-s="admin">Abrir panel de administración</button></div>':"")+alertCard()+perfCard()+(REQ_LOGIN&&isOrg()?vMiembros():"");if(!DB||me=="organizador"||REQ_LOGIN)return h;
+  h+=(canAdmin()?'<div class="rs"><b>Administración</b><p class="hint">Gestiona ediciones, partidos, personas, noticias y respaldos.</p><button class="pri" data-a="go" data-s="admin">Abrir panel de administración</button></div>':"")+alertCard()+perfCard()+(REQ_LOGIN&&isOrg()?vMiembros():"")+(REQ_LOGIN&&!isOrg()?claveColegioCard():"");if(!DB||me=="organizador"||REQ_LOGIN)return h;
   var q=MYREQ||{},tn=allTeams();
   return h+'<h2>Crear mi perfil en el torneo</h2><div class="rs"><p class="hint">Cuéntanos quién eres y qué rol quieres. El organizador revisará tu solicitud.</p>'+
   (MYREQ?'<p class="hint">Ya enviaste una solicitud (pendiente). Puedes actualizarla.</p>':"")+

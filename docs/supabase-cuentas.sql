@@ -17,15 +17,19 @@ create extension if not exists pgcrypto with schema extensions;
 -- 1. TABLAS
 -- =====================================================================
 
--- Colegios. La contraseña se guarda cifrada (bcrypt) y NUNCA se puede leer desde la app.
+-- Colegios. La contraseña se valida con bcrypt. La copia visible solo se entrega
+-- mediante una función que comprueba que quien la pide está aprobado en ese colegio.
 -- "codigo" es el código que el organizador reparte a estudiantes y participantes.
 create table if not exists public.colegios (
   id uuid primary key default gen_random_uuid(),
   nombre text not null check (char_length(btrim(nombre)) between 2 and 60),
   clave_hash text not null,
+  clave_visible text,
   codigo text not null unique,
   creado timestamptz not null default now()
 );
+-- Actualiza instalaciones existentes. Su clave previa no se puede recuperar del hash.
+alter table public.colegios add column if not exists clave_visible text;
 create unique index if not exists colegios_nombre_unico on public.colegios (lower(btrim(nombre)));
 
 -- Un perfil por cuenta (el correo y la contraseña los guarda Supabase Auth).
@@ -153,8 +157,8 @@ begin
   if char_length(v_nombre) < 2 or char_length(v_nombre) > 60 then
     raise exception 'El nombre del colegio debe tener entre 2 y 60 caracteres';
   end if;
-  if char_length(coalesce(p_clave, '')) < 6 then
-    raise exception 'La contraseña del colegio debe tener al menos 6 caracteres';
+  if char_length(coalesce(p_clave, '')) < 6 or char_length(p_clave) > 128 then
+    raise exception 'La contraseña del colegio debe tener entre 6 y 128 caracteres';
   end if;
   if not exists (select 1 from public.perfiles where id = auth.uid() and colegio_id is null) then
     raise exception 'Tu cuenta ya pertenece a un colegio';
@@ -162,15 +166,16 @@ begin
   if exists (select 1 from public.colegios where lower(btrim(nombre)) = lower(v_nombre)) then
     raise exception 'Ese colegio ya está registrado';
   end if;
-  insert into public.colegios (nombre, clave_hash, codigo)
-  values (v_nombre, crypt(p_clave, gen_salt('bf')), public.codigo_nuevo(v_nombre))
+  insert into public.colegios (nombre, clave_hash, clave_visible, codigo)
+  values (v_nombre, crypt(p_clave, gen_salt('bf')), p_clave, public.codigo_nuevo(v_nombre))
   returning id into v_id;
   update public.perfiles set colegio_id = v_id, estado = 'aprobado', rol = 'organizador', equipo = ''
   where id = auth.uid();
   return v_id;
 end $$;
 
--- Organizador de un colegio que ya existe: entra con la contraseña del colegio.
+-- Organizador de un colegio existente: la contraseña solo permite solicitar acceso;
+-- un organizador actual debe aprobar la solicitud para evitar autoasignarse permisos.
 create or replace function public.unirme_como_organizador(p_colegio uuid, p_clave text) returns void
 language plpgsql security definer set search_path = public, extensions as $$
 declare v_hash text;
@@ -183,7 +188,7 @@ begin
   if v_hash is null or crypt(coalesce(p_clave, ''), v_hash) <> v_hash then
     raise exception 'Contraseña del colegio incorrecta';
   end if;
-  update public.perfiles set colegio_id = p_colegio, estado = 'aprobado', rol = 'organizador', equipo = ''
+  update public.perfiles set colegio_id = p_colegio, estado = 'pendiente', rol = 'organizador', equipo = ''
   where id = auth.uid();
 end $$;
 
@@ -210,6 +215,30 @@ begin
   if not public.es_organizador() then raise exception 'Solo el organizador puede ver el código'; end if;
   select codigo into v_cod from public.colegios where id = public.mi_colegio();
   return v_cod;
+end $$;
+
+-- Contraseña visible para miembros aprobados del mismo colegio.
+create or replace function public.clave_visible_mi_colegio() returns text
+language plpgsql stable security definer set search_path = public as $$
+declare v_clave text; v_col uuid := public.mi_colegio();
+begin
+  if v_col is null then raise exception 'Solo los miembros aprobados pueden ver la contraseña'; end if;
+  select clave_visible into v_clave from public.colegios where id = v_col;
+  return v_clave;
+end $$;
+
+-- Cambiar la contraseña actualiza tanto el hash de validación como la copia visible.
+create or replace function public.establecer_clave_colegio(p_clave text) returns void
+language plpgsql security definer set search_path = public, extensions as $$
+declare v_clave text := coalesce(p_clave, ''); v_col uuid := public.mi_colegio();
+begin
+  if not public.es_organizador() then raise exception 'Solo un organizador puede cambiar la contraseña'; end if;
+  if char_length(v_clave) < 6 or char_length(v_clave) > 128 then
+    raise exception 'La contraseña del colegio debe tener entre 6 y 128 caracteres';
+  end if;
+  update public.colegios
+    set clave_hash = crypt(v_clave, gen_salt('bf')), clave_visible = v_clave
+    where id = v_col;
 end $$;
 
 -- Genera un código nuevo (el anterior deja de servir). Solo organizadores.
@@ -277,7 +306,7 @@ alter table public.perfiles enable row level security;
 alter table public.docs enable row level security;
 
 -- Colegios: cualquiera puede ver id y nombre (para el selector al crear la cuenta).
--- La contraseña cifrada y el código NO se pueden leer desde la app.
+-- Las contraseñas y el código no se leen directamente desde la tabla.
 revoke all on public.colegios from anon, authenticated;
 grant select (id, nombre) on public.colegios to anon, authenticated;
 drop policy if exists colegios_ver on public.colegios;
@@ -326,7 +355,8 @@ revoke all on function public.mi_colegio(), public.mi_cargo(), public.es_organiz
   public.puede_escribir_doc(text, text, jsonb), public.codigo_nuevo(text),
   public.validar_codigo(text), public.crear_colegio_y_unirme(text, text),
   public.unirme_como_organizador(uuid, text), public.unirme_con_codigo(text),
-  public.codigo_mi_colegio(), public.regenerar_codigo_colegio(), public.listar_miembros(),
+  public.codigo_mi_colegio(), public.clave_visible_mi_colegio(), public.establecer_clave_colegio(text),
+  public.regenerar_codigo_colegio(), public.listar_miembros(),
   public.aprobar_miembro(uuid, text, text), public.rechazar_miembro(uuid)
   from public, anon, authenticated;
 
@@ -335,7 +365,8 @@ grant execute on function
   public.mi_colegio(), public.mi_cargo(), public.es_organizador(),
   public.puede_escribir_doc(text, text, jsonb),
   public.crear_colegio_y_unirme(text, text), public.unirme_como_organizador(uuid, text),
-  public.unirme_con_codigo(text), public.codigo_mi_colegio(), public.regenerar_codigo_colegio(),
+  public.unirme_con_codigo(text), public.codigo_mi_colegio(), public.clave_visible_mi_colegio(),
+  public.establecer_clave_colegio(text), public.regenerar_codigo_colegio(),
   public.listar_miembros(), public.aprobar_miembro(uuid, text, text), public.rechazar_miembro(uuid)
   to authenticated;
 
